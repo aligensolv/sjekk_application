@@ -1,0 +1,33 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+
+class NoInternetScreen extends StatefulWidget {
+  const NoInternetScreen({super.key});
+
+  @override
+  _NoInternetScreenState createState() => _NoInternetScreenState();
+}
+
+class _NoInternetScreenState extends State<NoInternetScreen> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(automaticallyImplyLeading: false),
+      body: const Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Feather.wifi_off, size: 100),
+            // SizedBox(height: 16),
+            Text('Your Internet Connection Is Not Working', style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+}
