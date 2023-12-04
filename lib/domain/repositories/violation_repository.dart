@@ -9,7 +9,7 @@ abstract class IViolationRepository{
   Future<List<Violation>> getPlaceViolations(String id);
 
   Future<void> createViolation(BuildContext context);
-  Future<void> saveViolation(BuildContext context);
+  Future<Violation> saveViolation(BuildContext context);
 
   Future<void> completeViolation(Violation violation);
 

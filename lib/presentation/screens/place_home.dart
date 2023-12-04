@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:scanbot_sdk/license_plate_scan_data.dart';
+import 'package:scanbot_sdk/scanbot_sdk.dart';
 import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/data/models/place_model.dart';
 import 'package:sjekk_application/presentation/providers/place_provider.dart';
@@ -17,6 +19,8 @@ import 'package:sjekk_application/presentation/widgets/template/components/templ
 import 'package:sjekk_application/presentation/widgets/template/components/template_dialog.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
+
+import '../providers/create_violation_provider.dart';
 
 class PlaceHome extends StatelessWidget {
   static const String route = 'place_home';
@@ -115,8 +119,17 @@ class PlaceHome extends StatelessWidget {
             Spacer(),
       
             InfoTemplateButton(
-              onPressed: (){
-                Navigator.pushNamed(context, CreateViolationScreen.route);
+              onPressed: () async{
+                        var config = LicensePlateScannerConfiguration(
+                topBarBackgroundColor: ThemeHelper.primaryColor,  
+                scanStrategy: LicensePlateScanStrategy.ML_BASED,
+                cameraModule: CameraModule.BACK,
+                
+                confirmationDialogAccentColor: Colors.green);
+                LicensePlateScanResult result = await ScanbotSdkUi.startLicensePlateScanner(config);
+                await Provider.of<CreateViolationProvider>(context, listen: false).getCarInfo(result.licensePlate); 
+                await Provider.of<CreateViolationProvider>(context, listen: false).getSystemCar(result.licensePlate);
+                // Navigator.pushNamed(context, CreateViolationScreen.route);
               }, 
               width: double.infinity,
               text: 'Create VL'

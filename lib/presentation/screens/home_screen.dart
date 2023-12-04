@@ -7,6 +7,7 @@ import 'package:sjekk_application/presentation/screens/completed_violations_scre
 import 'package:sjekk_application/presentation/screens/done_shift.dart';
 import 'package:sjekk_application/presentation/screens/places_screen.dart';
 import 'package:sjekk_application/presentation/screens/saved_violations_screen.dart';
+import 'package:sjekk_application/presentation/screens/temp_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/template_workspace.dart';

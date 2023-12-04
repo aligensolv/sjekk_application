@@ -62,7 +62,7 @@ class TemplateContainerCard extends StatelessWidget {
   Color? backgroundColor;
   Alignment? alignment;
 
-  TemplateContainerCard({
+    TemplateContainerCard({
     super.key, this.alignment = Alignment.center,this.onTap,required this.title,this.height, this.backgroundColor, this.widthFactor = 1});
 
   @override
@@ -74,7 +74,7 @@ class TemplateContainerCard extends StatelessWidget {
       child: Container(
         width: media.width * widthFactor,
         height: height,
-        padding: EdgeInsets.all(12.0),
+        padding: EdgeInsets.all(8.0),
         decoration: BoxDecoration(
           color: backgroundColor ?? primaryColor,
           borderRadius: BorderRadius.circular(0.0),

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/presentation/providers/violation_details_provider.dart';
+import 'package:sjekk_application/presentation/providers/violations_provider.dart';
 import 'package:sjekk_application/presentation/screens/select_rule_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
@@ -36,6 +37,16 @@ class ViolationDetailsScreen extends StatefulWidget {
 }
 
 class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
+  late TextEditingController innerController;
+  late TextEditingController outterController;
+
+  @override
+  void dispose() {
+    innerController.dispose();
+    outterController.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -58,7 +69,7 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
         DateTime parsedCreatedAt = DateTime.parse(widget.violation.createdAt);
     return DefaultTabController(
       initialIndex: 0,
-      length: 6,
+      length: 5,
       child: Scaffold(
         body: Column(
           children: [
@@ -80,9 +91,6 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
               Tab(
                 icon: Icon(Icons.print),
               ),
-              Tab(
-                icon: Icon(Icons.upload_file),
-              ),
             ],
           ),
           12.h,
@@ -94,7 +102,6 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
                   RulesWidget(),
                   CommentsWidget(),
                   PrintWidget(),
-                  UploadViolationWidget(),
                 ],
               ),
             ),
@@ -107,8 +114,8 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
   Widget CommentsWidget(){
     return Consumer<ViolationDetailsProvider>(
       builder: (BuildContext context, ViolationDetailsProvider violationDetailsProvider, Widget? child) {  
-        final TextEditingController innerController = TextEditingController(text: violationDetailsProvider.violation.paperComment);
-        final TextEditingController outterController = TextEditingController(text: violationDetailsProvider.violation.outComment);
+        innerController = TextEditingController(text: violationDetailsProvider.violation.paperComment);
+        outterController = TextEditingController(text: violationDetailsProvider.violation.outComment);
         return Padding(
           padding: EdgeInsets.all(12.0),
           child: Column(
@@ -125,6 +132,15 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
                 child: InfoTemplateButton(
                   onPressed: () async{
                     await violationDetailsProvider.saveInnerComment(innerController.text);
+                    await showDialog(
+                      context: context, 
+                      builder: (context){
+                        return TemplateSuccessDialog(
+                          title: 'Saving Comment', 
+                          message: 'Inner comment was saved'
+                        );
+                      }
+                    );
                   }, 
                   text: 'SAVE'
                 ),
@@ -161,104 +177,6 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
     );
   }
 
-  Widget UploadViolationWidget(){
-    return Consumer<ViolationDetailsProvider>(
-      builder: (BuildContext context, ViolationDetailsProvider violationDetailsProvider, Widget? child) { 
-        if(violationDetailsProvider.violation.status == 'completed'){
-          return Center(
-            child: TemplateHeadlineText('Violation is already completed'),
-          );
-        }
-            return Container(
-      padding: EdgeInsets.all(12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TemplateHeadlineText('Complete VL and upload'),
-          12.h,
-          TemplateParagraphText("Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."),
-          Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              DangerTemplateButton(
-                onPressed: () async{
-                  await showDialog(
-                    context: context, 
-                    builder: (context){
-                      return TemplateConfirmationDialog(
-                        onConfirmation: () async{
-                          await Provider.of<CreateViolationProvider>(context, listen: false).deleteViolation(violationDetailsProvider.violation);
-                          Navigator.pop(context);
-                          if(Provider.of<CreateViolationProvider>(context, listen: false).errorState){
-                            Navigator.pop(context);
-
-                            await showDialog(
-                              context: context, 
-                              builder: (context){
-                                return TemplateFailureDialog(
-                                  title: 'Delete Failed', 
-                                  message: Provider.of<CreateViolationProvider>(context, listen: false).errorMessage
-                                );
-                              }
-                            );
-
-                          }else{
-                            await showDialog(
-                              context: context, 
-                              builder: (context){
-                                return TemplateSuccessDialog(
-                                  title: 'Delete Done', 
-                                  message: 'VL was successfully deleted',
-                                );
-                              }
-                            );
-                          }
-                        }, 
-                        title: 'Deleting VL', 
-                        message: 'Are you sure you want to delete this VL?'
-                      );
-                    }
-                  );
-                }, 
-                text: 'DELETE'
-              ),
-              12.w,
-              NormalTemplateButton(
-                text: 'COMPLETE',
-                onPressed: () async{
-                  await showDialog(
-                    context: context, 
-                    builder: (context){
-                      return TemplateConfirmationDialog(
-                        onConfirmation: () async{
-                          await Provider.of<CreateViolationProvider>(context, listen: false).completeViolation(widget.violation);
-                          Navigator.pop(context);
-                          await showDialog(
-                            context: context, 
-                            builder: (context){
-                              return TemplateSuccessDialog(
-                                title: 'Upload Done', 
-                                message: 'Violation was successfully uploaded and closed'
-                              );
-                            }
-                          );
-                        },  
-                        title: 'Complete Violation', 
-                        message: 'Are you sure you want to complete this violation?'
-                      );
-                    }
-                  );
-                },
-              ),
-            ],
-          )
-        ],
-      ),
-    );
-      },
-    );
-  }
 
 Widget CarInfoWidget() {
   return Padding(
@@ -267,9 +185,62 @@ Widget CarInfoWidget() {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TemplateContainerCard(
-            title: widget.violation.plateInfo.plate,
-            backgroundColor: widget.violation.is_car_registered ? Colors.blue : Colors.red,
+          Row(
+            children: [
+              Expanded(
+                child: TemplateContainerCard(
+                  title: widget.violation.plateInfo.plate,
+                  height: 40,
+  
+                  backgroundColor: widget.violation.is_car_registered ? Colors.blue : Colors.red,
+                ),
+              ),
+              12.w,
+                            Expanded(
+                              child: DangerTemplateButton(
+                                            onPressed: () async{
+                                              await showDialog(
+                                                context: context, 
+                                                builder: (context){
+                                                  return TemplateConfirmationDialog(
+                                                    onConfirmation: () async{
+                                                      await Provider.of<CreateViolationProvider>(context, listen: false).deleteViolation(widget.violation);
+                                                      Navigator.pop(context);
+                                                      if(Provider.of<CreateViolationProvider>(context, listen: false).errorState){
+                              Navigator.pop(context);
+                            
+                              await showDialog(
+                                context: context, 
+                                builder: (context){
+                                  return TemplateFailureDialog(
+                                    title: 'Delete Failed', 
+                                    message: Provider.of<CreateViolationProvider>(context, listen: false).errorMessage
+                                  );
+                                }
+                              );
+                            
+                                                      }else{
+                              await showDialog(
+                                context: context, 
+                                builder: (context){
+                                  return TemplateSuccessDialog(
+                                    title: 'Delete Done', 
+                                    message: 'VL was successfully deleted',
+                                  );
+                                }
+                              );
+                                                      }
+                                                    }, 
+                                                    title: 'Deleting VL', 
+                                                    message: 'Are you sure you want to delete this VL?'
+                                                  );
+                                                }
+                                              );
+                                            }, 
+                                            text: 'DELETE'
+                                          ),
+                            ),
+            ],
           ),
           12.h,
                               _buildInfoContainer('Type', widget.violation.plateInfo.type),
@@ -503,8 +474,7 @@ Widget PrintWidget(){
                   child: AbsorbPointer(
                     absorbing: DateTime.now().difference(parsedCreatedAt).inMinutes < 6,
                     child: NormalTemplateButton(onPressed: ()async{
-                      if(violationDetailsProvider.printOptions[violationDetailsProvider.selectedPrintOptionIndex].type == PrintType.hand){
-                        await showDialog(
+                      await showDialog(
                           context: context,
                           builder: (context){
                             return TemplateSuccessDialog(
@@ -519,19 +489,10 @@ Widget PrintWidget(){
                         XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
                         if(file != null){
                           await violationDetailsProvider.addImage(file.path);
+                          await Provider.of<ViolationProvider>(context, listen: false).completeViolation(widget.violation);
+                          SnackbarUtils.showSnackbar(context, 'VL is completed');
+                          Navigator.pop(context);
                         }
-                      }else{
-                        await showDialog(
-                          context: context,
-                          builder: (context){
-                            return TemplateSuccessDialog(
-                              title: 'Printing VL',
-                              message: 'VL Printing coming soon',
-                              
-                            );
-                          }
-                        );
-                      }
                     }, text: 'PRINT',),
                   ),
                 ),

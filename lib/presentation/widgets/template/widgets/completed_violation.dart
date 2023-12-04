@@ -65,11 +65,6 @@ class CompletedViolationWidget extends StatelessWidget {
                 )
               ],
             ),
-            Column(
-              children: [
-                TemplateParagraphText(violation.plateInfo.brand)
-              ],
-            ),
             8.h,
             Align(
               alignment: Alignment.centerRight,

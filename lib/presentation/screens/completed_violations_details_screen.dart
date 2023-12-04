@@ -58,7 +58,7 @@ class _CompletedViolationDetailsScreenState extends State<CompletedViolationDeta
         DateTime parsedCreatedAt = DateTime.parse(widget.violation.createdAt);
     return DefaultTabController(
       initialIndex: 0,
-      length: 6,
+      length: 5,
       child: Scaffold(
         body: Column(
           children: [
@@ -80,9 +80,6 @@ class _CompletedViolationDetailsScreenState extends State<CompletedViolationDeta
               Tab(
                 icon: Icon(Icons.print),
               ),
-              Tab(
-                icon: Icon(Icons.upload_file),
-              ),
             ],
           ),
           12.h,
@@ -94,7 +91,6 @@ class _CompletedViolationDetailsScreenState extends State<CompletedViolationDeta
                   RulesWidget(),
                   CommentsWidget(),
                   PrintWidget(),
-                  UploadViolationWidget(),
                 ],
               ),
             ),
@@ -134,65 +130,6 @@ class _CompletedViolationDetailsScreenState extends State<CompletedViolationDeta
             ],
           ),
         );
-      },
-    );
-  }
-
-  Widget UploadViolationWidget(){
-    return Consumer<ViolationDetailsProvider>(
-      builder: (BuildContext context, ViolationDetailsProvider violationDetailsProvider, Widget? child) { 
-        if(violationDetailsProvider.violation.status == 'completed'){
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TemplateHeadlineText('Violation is already completed'),
-              12.h,
-              TemplateParagraphText(violationDetailsProvider.violation.completedAt ?? 'N/A')
-            ],
-          );
-        }
-            return Container(
-      padding: EdgeInsets.all(12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TemplateHeadlineText('Complete VL and upload'),
-          12.h,
-          TemplateParagraphText("Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."),
-          Spacer(),
-          Align(
-            alignment: Alignment.centerRight,
-            child: NormalTemplateButton(
-              text: 'Complete',
-              onPressed: () async{
-                await showDialog(
-                  context: context, 
-                  builder: (context){
-                    return TemplateConfirmationDialog(
-                      onConfirmation: () async{
-                        await Provider.of<CreateViolationProvider>(context, listen: false).completeViolation(widget.violation);
-                        Navigator.pop(context);
-                        await showDialog(
-                          context: context, 
-                          builder: (context){
-                            return TemplateSuccessDialog(
-                              title: 'Upload Done', 
-                              message: 'Violation was successfully uploaded and closed'
-                            );
-                          }
-                        );
-                      }, 
-                      title: 'Complete Violation', 
-                      message: 'Are you sure you want to complete this violation?'
-                    );
-                  }
-                );
-              },
-            ),
-          )
-        ],
-      ),
-    );
       },
     );
   }

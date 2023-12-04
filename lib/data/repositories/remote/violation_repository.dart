@@ -152,7 +152,7 @@ class ViolationRepositoryImpl extends IViolationRepository{
   }
   
   @override
-  Future<void> saveViolation(BuildContext context) async{
+  Future<Violation> saveViolation(BuildContext context) async{
     try{
       final createViolationProvider = Provider.of<CreateViolationProvider>(context,listen: false);
       final ruleProvider = Provider.of<RuleProvider>(context, listen: false);
@@ -188,8 +188,15 @@ class ViolationRepositoryImpl extends IViolationRepository{
             var response = await request.send();
       print(response.statusCode);
       if (response.statusCode == 200) {
-        // Handle success response if needed
-        print('Data and files/images uploaded successfully');
+        print('i got result');
+        Map decoded = jsonDecode(await response.stream.bytesToString());
+        print('printing it niw');
+        print(decoded);
+        Violation violation = Violation.fromJson(decoded);
+        print('violation returned is ....');
+        print(violation);
+
+        return violation;
       } else {
         throw await response.stream.bytesToString();
       }

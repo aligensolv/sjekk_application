@@ -9,20 +9,27 @@ import 'package:scanbot_sdk/license_plate_scan_data.dart';
 import 'package:scanbot_sdk/scanbot_sdk_ui.dart';
 import 'package:sjekk_application/core/constants/app_images.dart';
 import 'package:sjekk_application/core/helpers/theme_helper.dart';
+import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/data/models/car_image_model.dart';
 import 'package:sjekk_application/data/models/plate_info_model.dart';
 import 'package:sjekk_application/data/models/print_option_model.dart';
 import 'package:sjekk_application/data/models/rule_model.dart';
+import 'package:sjekk_application/data/models/violation_model.dart';
 import 'package:sjekk_application/data/repositories/remote/autosys_repository_impl.dart';
 import 'package:sjekk_application/presentation/providers/create_violation_provider.dart';
 import 'package:sjekk_application/presentation/providers/rule_provider.dart';
 import 'package:sjekk_application/presentation/screens/gallery_view.dart';
 import 'package:sjekk_application/presentation/screens/place_home.dart';
+import 'package:sjekk_application/presentation/screens/violation_details_screen.dart';
 import 'package:sjekk_application/presentation/widgets/custom_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_dialog.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_image.dart';
+import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text_field.dart';
+import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
+
+import '../providers/violation_details_provider.dart';
 
 
 
@@ -161,82 +168,6 @@ class _CreateViolationScreenState extends State<CreateViolationScreen> {
     );
   }
 
-  Widget PrinterOptionsWidget(BuildContext context){
-    final media = MediaQuery.of(context).size;
-    return Consumer<CreateViolationProvider>(
-      builder: (BuildContext context, CreateViolationProvider value, Widget? child) { 
-        return Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: [
-              Expanded(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: value.printOptions.length,
-                  itemBuilder: (context,index){
-                    return GestureDetector(
-                      onTap: (){
-                        value.updateSelectedPrintOptionIndex(index);
-                      },
-                      child: Container(
-                                width: media.width * 0.7,
-                                height: 40,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                      color: value.selectedPrintOptionIndex == index ? Colors.green : Colors.black12
-                                ),
-                                child: Text(value.printOptions[index].name),
-                              ),
-                    );
-                  },
-                  separatorBuilder: (context,index){
-                    return SizedBox(height: 12,);
-                  },
-                ),
-              ),
-
-              Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // BasicButton(onPressed: ()async{
-                //   if(value.printOptions[value.selectedPrintOptionIndex].type == PrintType.hand){
-                //     ImagePicker imagePicker = ImagePicker();       
-                //     XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
-                //     if(file != null){
-                //       String path = file.path;
-                //       CarImage carImage = CarImage(path: path);
-
-                //       Provider.of<CreateViolationProvider>(context, listen: false).addImage(carImage);
-                //     }
-                //   }
-                //   bool create = await Provider.of<CreateViolationProvider>(context, listen: false).createViolation(context);
-                //   if(create){
-                //     await showDialog(
-                //       context: context,
-                //       builder: (context){
-                //         return TemplateSuccessDialog(
-                //           title: 'Creating VL',
-                //           message: 'VL was created successfully',
-                          
-                //         );
-                //       }
-                //     );
-
-                //     Navigator.of(context).popUntil(ModalRoute.withName(PlaceHome.route));
-
-                //   }
-                // }, text: 'CREATE', backgroundColor: Colors.green,),
-                // SizedBox(width: 12.0,),
-              ],
-            ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget CommentsWidget(BuildContext context){
     return Consumer<CreateViolationProvider>(
       builder: (BuildContext context, CreateViolationProvider value, Widget? child) { 
@@ -354,19 +285,21 @@ class _CameraScannerState extends State<CameraScanner> {
   }
 
   void openLPR() async{
-    final provider = Provider.of<CreateViolationProvider>(context, listen: false);
-    if(provider.plateInfo == null){
-          var config = LicensePlateScannerConfiguration(
-                  topBarBackgroundColor: ThemeHelper.primaryColor,  
-                  scanStrategy: LicensePlateScanStrategy.ML_BASED,
-                  cameraModule: CameraModule.BACK,
-                  
-                  confirmationDialogAccentColor: Colors.green);
-          LicensePlateScanResult result = await ScanbotSdkUi.startLicensePlateScanner(config);
-          AutosysRepositoryImpl autosysRepositoryImpl = AutosysRepositoryImpl();
-          PlateInfo plateInfo = await autosysRepositoryImpl.getCarInfo(result.licensePlate); 
-          Provider.of<CreateViolationProvider>(context, listen: false).setCarInfo(plateInfo);
-          await Provider.of<CreateViolationProvider>(context, listen: false).getSystemCar(result.licensePlate);
+    try{
+      final provider = Provider.of<CreateViolationProvider>(context, listen: false);
+      if(provider.plateInfo == null){
+            var config = LicensePlateScannerConfiguration(
+                    topBarBackgroundColor: ThemeHelper.primaryColor,  
+                    scanStrategy: LicensePlateScanStrategy.ML_BASED,
+                    cameraModule: CameraModule.BACK,
+                    
+                    confirmationDialogAccentColor: Colors.green);
+            LicensePlateScanResult result = await ScanbotSdkUi.startLicensePlateScanner(config);
+            await Provider.of<CreateViolationProvider>(context, listen: false).getCarInfo(result.licensePlate); 
+            await Provider.of<CreateViolationProvider>(context, listen: false).getSystemCar(result.licensePlate);
+      }
+    }catch(e){
+      SnackbarUtils.showSnackbar(context, e.toString(), type: SnackBarType.failure);
     }
   }
 
@@ -378,24 +311,48 @@ class _CameraScannerState extends State<CameraScanner> {
       padding: const EdgeInsets.all(12.0),
       child: Consumer<CreateViolationProvider>(
       builder: (BuildContext context, CreateViolationProvider value, Widget? child) { 
+        if(value.errorState){
+          return Padding(
+            padding: EdgeInsets.all(12.0),
+            child: TemplateParagraphText(value.errorMessage),
+          );
+        }
+
         if(value.plateInfo == null){
           return Container();
         }
 
         return Column(
       children: [
-        SizedBox(height: 48.0,),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Text('Car Information',style: TextStyle(
-              color: ThemeHelper.textColor,
-              fontSize: 18
-            ),),
+              BasicButton(onPressed: () async{
+                  Violation? savedViolation = await Provider.of<CreateViolationProvider>(context, listen: false).saveViolation(context);
+                  if(savedViolation != null){
+                    await showDialog(
+                      context: context,
+                      builder: (context){
+                        return TemplateSuccessDialog(
+                          title: 'Saving VL', 
+                          message: 'VL was saved'
+                        );
+                      }
+                    );
+                    Provider.of<ViolationDetailsProvider>(context, listen: false).setViolation(savedViolation);
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => ViolationDetailsScreen(violation: savedViolation))
+                    );
+                    // Navigator.of(context).popUntil(ModalRoute.withName(PlaceHome.route));
+                  }else{
+                    SnackbarUtils.showSnackbar(context, Provider.of<CreateViolationProvider>(context, listen: false).errorMessage);
+                  }
+                }, text: 'SAVE'),
 
-  BasicButton(onPressed: () async{
-                  bool save = await Provider.of<CreateViolationProvider>(context, listen: false).saveViolation(context);
-                  if(save){
+                12.w,
+                  BasicButton(onPressed: () async{
+                  bool createdViolation = await Provider.of<CreateViolationProvider>(context, listen: false).createViolation(context);
+                  if(createdViolation){
                     await showDialog(
                       context: context,
                       builder: (context){
@@ -405,11 +362,22 @@ class _CameraScannerState extends State<CameraScanner> {
                         );
                       }
                     );
+                    // Provider.of<ViolationDetailsProvider>(context, listen: false).setViolation(savedViolation);
+                    // Navigator.of(context).pushReplacement(
+                    //   MaterialPageRoute(builder: (context) => ViolationDetailsScreen(violation: savedViolation))
+                    // );
                     Navigator.of(context).popUntil(ModalRoute.withName(PlaceHome.route));
+                  }else{
+                    SnackbarUtils.showSnackbar(context, Provider.of<CreateViolationProvider>(context, listen: false).errorMessage);
                   }
-                }, text: 'CREATE')
+                },backgroundColor: Colors.green, text: 'CREATE')
           ],
         ),
+        SizedBox(height: 12.0,),
+        Text('Car Information',style: TextStyle(
+          color: ThemeHelper.textColor,
+          fontSize: 18
+        ),),
         SizedBox(height: 12,),
         Align(
           alignment: Alignment.centerRight,

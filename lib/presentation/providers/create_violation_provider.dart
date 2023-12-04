@@ -9,7 +9,6 @@ import 'package:sjekk_application/data/repositories/remote/violation_repository.
 import 'package:sjekk_application/presentation/screens/saved_violations_screen.dart';
 
 import '../../data/models/car_image_model.dart';
-import '../../data/repositories/local/local_violations_repository_impl.dart';
 import '../../data/repositories/remote/autosys_repository_impl.dart';
 
 
@@ -20,11 +19,6 @@ class CreateViolationProvider extends ChangeNotifier{
   String paper_comment = "";
   String out_comment = "";
 
-  List<PrintOption> printOptions = [
-    PrintOption(name: 'Print now', type: PrintType.now),
-    PrintOption(name: 'Send with post', type: PrintType.post),
-    PrintOption(name: 'Give to hand', type: PrintType.hand)
-  ];
 
   int selectedPrintOptionIndex = 0;
 
@@ -48,21 +42,22 @@ class CreateViolationProvider extends ChangeNotifier{
     out_comment = '';
     selectedPrintOptionIndex = 0;
     isRegistered = false;
+    plateInfo = null;
+    registeredCar = null;
 
     notifyListeners();
   }
 
   final _violationRepository = ViolationRepositoryImpl();
-  final _localViolationRepository = LocalViolationRepositoryImpl();
-  Future<bool> saveViolation(BuildContext context) async{
+  Future<Violation?> saveViolation(BuildContext context) async{
     try{
-      await _violationRepository.saveViolation(context);
+      Violation violation = await _violationRepository.saveViolation(context);
       clearAll();
-      return true;
+      return violation;
     }catch(error){
       errorState = true;
       errorMessage = error.toString();
-      return false;
+      return null;
     }
   }
 
@@ -110,7 +105,8 @@ class CreateViolationProvider extends ChangeNotifier{
     try{
       final AutosysRepositoryImpl autosysRepository = AutosysRepositoryImpl();
 
-      plateInfo = await autosysRepository.getCarInfo(plate);
+      PlateInfo _plateInfo = await autosysRepository.getCarInfo(plate);
+      setCarInfo(_plateInfo);
       return true;
     }catch(error){
       print(error.toString());

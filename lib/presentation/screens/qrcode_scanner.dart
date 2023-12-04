@@ -31,10 +31,10 @@ class _QrCodeScannerState extends State<QrCodeScanner> {
                                   mobileScannerController.dispose();
 
                 } else {
-                  final qrCodeValue = barcode.raw;
+                  final qrCodeValue = barcode.barcodes.first;
                   mobileScannerController.dispose();
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: ((context) => ScanResultScreen(result: qrCodeValue.toString(),)))
+                    MaterialPageRoute(builder: ((context) => ScanResultScreen(result: qrCodeValue.rawValue.toString(),)))
                   );
 
                 }

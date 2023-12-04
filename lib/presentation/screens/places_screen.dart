@@ -41,65 +41,66 @@ class _PlacesScreenState extends State<PlacesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: scaffoldColor,
-      body: Consumer<PlaceProvider>(
-        builder: (BuildContext context, PlaceProvider value, Widget? child) {
-          if(value.loadingState){
-            return Center(
-              child: CircularProgressIndicator(),
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: scaffoldColor,
+        body: Consumer<PlaceProvider>(
+          builder: (BuildContext context, PlaceProvider value, Widget? child) {
+            if(value.loadingState){
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+      
+            if(value.errorState){
+              return Center(
+                child: Text(value.errorMessage),
+              );
+            }
+      
+            List<Place> places = value.places;
+      
+            return Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                children: [
+                  NormalTemplateTextFieldWithIcon(
+                    onChanged: (val){
+                      value.searchPlaces(val);
+                    }, 
+                    icon: Icons.search,
+                    hintText: 'Search'
+                  ),
+                  12.h,
+                  ListView.separated(
+                    padding: EdgeInsets.zero,
+                    separatorBuilder: ((context, index) {
+                      return 6.h;
+                    }),
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: places.length,
+                    itemBuilder: (context, index) {
+                      Place place = places[index];
+                
+                      return TemplateContainerCard(
+                        title: '${place.code} \n${place.location}',
+                        alignment: Alignment.centerLeft,
+                        onTap: (){
+                          value.setSelectedPlace(place);
+                          value.setSelectedPlaceLoginTime();
+                          Navigator.pushNamed(context, PlaceDetailsScreen.route,arguments: {
+                            'place': place
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
             );
-          }
-    
-          if(value.errorState){
-            return Center(
-              child: Text(value.errorMessage),
-            );
-          }
-    
-          List<Place> places = value.places;
-    
-          return Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              children: [
-                48.h,
-                NormalTemplateTextFieldWithIcon(
-                  onChanged: (val){
-                    value.searchPlaces(val);
-                  }, 
-                  icon: Icons.search,
-                  hintText: 'Search'
-                ),
-                12.h,
-                ListView.separated(
-                  padding: EdgeInsets.zero,
-                  separatorBuilder: ((context, index) {
-                    return 6.h;
-                  }),
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: places.length,
-                  itemBuilder: (context, index) {
-                    Place place = places[index];
-              
-                    return TemplateContainerCard(
-                      title: '${place.code} \n${place.location}',
-                      alignment: Alignment.centerLeft,
-                      onTap: (){
-                        value.setSelectedPlace(place);
-                        value.setSelectedPlaceLoginTime();
-                        Navigator.pushNamed(context, PlaceDetailsScreen.route,arguments: {
-                          'place': place
-                        });
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
