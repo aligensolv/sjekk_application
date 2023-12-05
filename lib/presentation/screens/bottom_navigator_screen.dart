@@ -42,15 +42,15 @@ class _HomeScreenNavigatorState extends State<BottomScreenNavigator> {
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Home',
+            label: 'HOME',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Settings',
+            label: 'SETTINGS',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.more_horiz),
-            label: 'More',
+            label: 'MORE',
           ),
         ],
       ),

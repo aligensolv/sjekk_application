@@ -22,62 +22,63 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<AuthProvider>(context).user;
-    return Scaffold(
-      backgroundColor: scaffoldColor,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              48.h,
-              Text(
-                'Welcome ${user.username}',
-                style: Theme.of(context).textTheme.headline6?.copyWith(
-                      color: ThemeHelper.secondaryColor,
-                    ),
-              ),
-              const SizedBox(height: 20),
-              InkWell(
-                onTap: (){
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => TemplateWorkspace())
-                  );
-                },
-                child: Image.asset(AppImages.fullKontroll),
-              ),
-              const SizedBox(height: 20),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                children: [
-                  TemplateContainerCardWithIcon(
-                      title: 'Places',
-                      icon: Icons.place,
-                      
-                      onTap: () async {
-                        Navigator.pushNamed(context,PlacesScreen.route);
-                      }),
-                  TemplateContainerCardWithIcon(
-                      title: 'Saved VL', backgroundColor:ThemeHelper.secondaryColor, icon: Icons.save, onTap: () {
-                        Navigator.pushNamed(context, SavedViolationScreen.route);
-                      }),
-                  TemplateContainerCardWithIcon(
-                      title: 'Done VL',backgroundColor: Colors.green, icon: Icons.done_all, onTap: () {
-                        Navigator.pushNamed(context, CompletedViolationsScreen.route);
-                      }),
-                  TemplateContainerCardWithIcon(
-                      title: 'Done Shift', backgroundColor: Colors.red, icon: Icons.logout, onTap: () {
-                        Navigator.pushNamed(context, DoneShiftScreen.route);
-                      }),
-                ],
-              ),
-
-              // Workspace()
-            ],
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: scaffoldColor,
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome ${user.username}',
+                  style: Theme.of(context).textTheme.headline6?.copyWith(
+                        color: ThemeHelper.secondaryColor,
+                      ),
+                ),
+                const SizedBox(height: 20),
+                InkWell(
+                  onTap: (){
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => TemplateWorkspace())
+                    );
+                  },
+                  child: Image.asset(AppImages.fullKontroll),
+                ),
+                const SizedBox(height: 20),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  children: [
+                    TemplateContainerCardWithIcon(
+                        title: 'PLACES',
+                        icon: Icons.place,
+                        
+                        onTap: () async {
+                          Navigator.pushNamed(context,PlacesScreen.route);
+                        }),
+                    TemplateContainerCardWithIcon(
+                        title: 'SAVED VL', backgroundColor:ThemeHelper.secondaryColor, icon: Icons.save, onTap: () {
+                          Navigator.pushNamed(context, SavedViolationScreen.route);
+                        }),
+                    TemplateContainerCardWithIcon(
+                        title: 'DONE VL',backgroundColor: Colors.green, icon: Icons.done_all, onTap: () {
+                          Navigator.pushNamed(context, CompletedViolationsScreen.route);
+                        }),
+                    TemplateContainerCardWithIcon(
+                        title: 'END SHIFT', backgroundColor: Colors.red, icon: Icons.logout, onTap: () {
+                          Navigator.pushNamed(context, DoneShiftScreen.route);
+                        }),
+                  ],
+                ),
+    
+                // Workspace()
+              ],
+            ),
           ),
         ),
       ),

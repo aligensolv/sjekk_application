@@ -9,8 +9,27 @@ class PrinterProvider extends ChangeNotifier{
   bool loadingState = false;
   final PrinterRepository _printerRepository = PrinterRepository();
 
-  update(){
+  clear(){
+    errorMessage = '';
+    errorState = false;
+  }
+
+  pushPrinter(Printer printer){
+    printers.add(printer);
     notifyListeners();
+  }
+
+  createPrinter(Printer printer) async{
+      try{
+        await _printerRepository.createPriner(printer);
+        pushPrinter(printer);
+        clear();
+      }catch(error){
+        errorMessage = error.toString();
+        errorState = true;
+      }
+
+      notifyListeners();
   }
 
   fetchPrinters() async{
@@ -26,9 +45,5 @@ class PrinterProvider extends ChangeNotifier{
 
     loadingState = false;
     notifyListeners();
-  }
-
-  createPrinter(Printer printer) async{
-    await _printerRepository.createPriner(printer);
   }
 }

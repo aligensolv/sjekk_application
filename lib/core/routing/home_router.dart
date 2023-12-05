@@ -10,6 +10,7 @@ import 'package:sjekk_application/presentation/screens/place_details.dart';
 import 'package:sjekk_application/presentation/screens/place_home.dart';
 import 'package:sjekk_application/presentation/screens/place_violations.dart';
 import 'package:sjekk_application/presentation/screens/places_screen.dart';
+import 'package:sjekk_application/presentation/screens/printers_settings.dart';
 import 'package:sjekk_application/presentation/screens/saved_violations_screen.dart';
 
 import '../../presentation/screens/completed_violations_screen.dart';
@@ -24,6 +25,12 @@ class HomeRouter {
         return MaterialPageRoute(
           builder: (context) => BottomScreenNavigator(),
           settings: RouteSettings(name: BottomScreenNavigator.route)
+        );
+
+      case PrintersSettings.route:
+        return MaterialPageRoute(
+          builder: (context) => PrintersSettings(),
+          settings: RouteSettings(name: PrintersSettings.route)
         );
 
       case HomeNavigatorScreen.route:
@@ -53,8 +60,8 @@ class HomeRouter {
           settings: RouteSettings(name: PlaceHome.route)
         );
 
-      case CreateViolationScreen.route:
-        return MaterialPageRoute(builder: (context) => CreateViolationScreen());
+      // case CreateViolationScreen.route:
+      //   return MaterialPageRoute(builder: (context) => CreateViolationScreen());
 
       case BoardsScreen.route:
         return MaterialPageRoute(builder: (context) => BoardsScreen());

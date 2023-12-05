@@ -6,10 +6,18 @@ import '../theme/button_theme.dart';
 class NormalTemplateButton extends StatelessWidget {
   final VoidCallback onPressed;
   final String text;
+  Color? backgroundColor;
   double? height;
   double? width;
 
-  NormalTemplateButton({super.key,this.height, this.width, required this.onPressed, required this.text});
+  NormalTemplateButton({
+    super.key,
+    this.height, 
+    this.width, 
+    required this.onPressed, 
+    required this.text,
+    this.backgroundColor
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +27,7 @@ class NormalTemplateButton extends StatelessWidget {
         minimumSize: MaterialStatePropertyAll(
           Size(width ?? 0, height ?? 40)
         ),
+        backgroundColor: MaterialStatePropertyAll(backgroundColor ?? primaryColor)
       ),
       child: Text(text, style: normalButtonTextStyle,),
     );

@@ -1,26 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:sjekk_application/data/models/place_model.dart';
 import 'package:sjekk_application/data/models/plate_info_model.dart';
-import 'package:sjekk_application/data/models/print_option_model.dart';
 import 'package:sjekk_application/data/models/registered_car_model.dart';
-import 'package:sjekk_application/data/models/rule_model.dart';
 import 'package:sjekk_application/data/models/violation_model.dart';
 import 'package:sjekk_application/data/repositories/remote/car_repository_impl.dart';
 import 'package:sjekk_application/data/repositories/remote/violation_repository.dart';
-import 'package:sjekk_application/presentation/screens/saved_violations_screen.dart';
-
-import '../../data/models/car_image_model.dart';
 import '../../data/repositories/remote/autosys_repository_impl.dart';
 
 
 
 class CreateViolationProvider extends ChangeNotifier{
-  List<CarImage> carImages = [];
-  List<Rule> rules = [];
-  String paper_comment = "";
-  String out_comment = "";
+  Violation? savedViolation;
+
+  setSavedViolation(
+    PlateInfo plateInfo,
+    Place place
+  ){
+    savedViolation = Violation(
+      rules: [], 
+      status: 'saved', 
+      createdAt: DateTime.now().toLocal().toString(), 
+      plateInfo: plateInfo, 
+      carImages: [], 
+      place: place, 
+      paperComment: '', 
+      outComment: '', 
+      is_car_registered: true, 
+      registeredCar: registeredCar, 
+      completedAt: null
+    );
+    notifyListeners();
+  }
+
+  // List<CarImage> carImages = [];
+  // List<Rule> rules = [];
+  // String paper_comment = "";
+  // String out_comment = "";
+  
 
 
-  int selectedPrintOptionIndex = 0;
+  // int selectedPrintOptionIndex = 0;
 
   PlateInfo? plateInfo;
   RegisteredCar? registeredCar;
@@ -36,11 +55,11 @@ class CreateViolationProvider extends ChangeNotifier{
 
 
   clearAll(){
-    carImages.clear();
-    rules.clear();
-    paper_comment = '';
-    out_comment = '';
-    selectedPrintOptionIndex = 0;
+    // carImages.clear();
+    // rules.clear();
+    // paper_comment = '';
+    // out_comment = '';
+    // selectedPrintOptionIndex = 0;
     isRegistered = false;
     plateInfo = null;
     registeredCar = null;
@@ -49,23 +68,19 @@ class CreateViolationProvider extends ChangeNotifier{
   }
 
   final _violationRepository = ViolationRepositoryImpl();
-  Future<Violation?> saveViolation(BuildContext context) async{
+  Future<Violation?> saveViolation() async{
     try{
-      Violation violation = await _violationRepository.saveViolation(context);
+      Violation resultSavedViolation = await _violationRepository.saveViolation(
+        violation: savedViolation!,
+        place: savedViolation!.place,
+        selectedRules: []
+      );
       clearAll();
-      return violation;
+      return resultSavedViolation;
     }catch(error){
       errorState = true;
       errorMessage = error.toString();
       return null;
-    }
-  }
-
-  Future completeViolation(Violation violation) async{
-    try{
-      await _violationRepository.completeViolation(violation);
-    }catch(error){
-      return;
     }
   }
 
@@ -79,14 +94,27 @@ class CreateViolationProvider extends ChangeNotifier{
     }
   }
 
-  Future<bool> createViolation(BuildContext context) async{
+  createViolation({
+    required Violation violation,
+    required Place place,
+    required List<String> selectedRules
+  }) async{
     try{
-      await _violationRepository.createViolation(context);
+      print(violation.toJson());
+      print(place.toJson());
+      print(selectedRules);
+      await _violationRepository.createViolation(
+        violation: violation,
+        place: place,
+        selectedRules: selectedRules
+      );
       clearAll();
-      return true;
     }catch(error){
-      return false;
+      errorState = true;
+      errorMessage = error.toString();
     }
+
+    notifyListeners();
   }
 
   Future<void> getSystemCar(String plate) async{
@@ -115,33 +143,33 @@ class CreateViolationProvider extends ChangeNotifier{
     }
   }
 
-  updateSelectedPrintOptionIndex(index){
-    selectedPrintOptionIndex = index;
-    notifyListeners();
-  }
+  // updateSelectedPrintOptionIndex(index){
+  //   selectedPrintOptionIndex = index;
+  //   notifyListeners();
+  // }
 
-  addRule(Rule rule){
-    if(!rules.any((element) => element.id == rule.id)){
-      rules.add(rule);
-    }
-  }
+  // addRule(Rule rule){
+  //   if(!rules.any((element) => element.id == rule.id)){
+  //     rules.add(rule);
+  //   }
+  // }
 
-  removeRule(Rule rule){
-    rules = rules.where((element) => element.id != rule.id).toList();
-  }
+  // removeRule(Rule rule){
+  //   rules = rules.where((element) => element.id != rule.id).toList();
+  // }
 
-  addImage(CarImage image){
-    carImages.add(image);
-    notifyListeners();
-  }
+  // addImage(CarImage image){
+  //   carImages.add(image);
+  //   notifyListeners();
+  // }
 
-  setPaperComment(String input){
-    paper_comment = input;
-  }
+  // setPaperComment(String input){
+  //   paper_comment = input;
+  // }
 
-  setOutComment(String input){
-    out_comment = input;
-  }
+  // setOutComment(String input){
+  //   out_comment = input;
+  // }
 
   setCarInfo(PlateInfo info){
     plateInfo = info;

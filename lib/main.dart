@@ -23,6 +23,7 @@ import 'package:sjekk_application/presentation/widgets/template/theme/app_theme.
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
 import 'data/repositories/local/cache_repository_impl.dart';
+import 'presentation/providers/local_violation_details_provider.dart';
 
 const SCANBOT_SDK_LICENSE_KEY =
 "A5Qo4Gb0iVtBgJzcdjFUr+NOt69e5/" +
@@ -174,6 +175,9 @@ class EntryPoint extends StatelessWidget {
         ),
         ChangeNotifierProvider<ViolationDetailsProvider>(
           create: (context) => ViolationDetailsProvider(),
+        ),
+        ChangeNotifierProvider<LocalViolationDetailsProvider>(
+          create: (context) => LocalViolationDetailsProvider(),
         ),
       ],
       child: MaterialApp(

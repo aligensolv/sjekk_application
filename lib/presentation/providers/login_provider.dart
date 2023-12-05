@@ -32,6 +32,7 @@ class LoginProvider extends ChangeNotifier{
       errorState = true;
       errorMessage = error.toString();
       changeLoadingState(false);
+      return null;
     }
   }
 }

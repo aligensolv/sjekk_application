@@ -15,10 +15,10 @@ class ViolationProvider extends ChangeNotifier{
     errorMessage = "";
   }
 
-  Future completeViolation(Violation violation) async{
-    ViolationRepositoryImpl violationRepositoryImpl = ViolationRepositoryImpl();
-    await violationRepositoryImpl.completeViolation(violation);
-  }
+  // Future completeViolation(Violation violation) async{
+  //   ViolationRepositoryImpl violationRepositoryImpl = ViolationRepositoryImpl();
+  //   await violationRepositoryImpl.completeViolation(violation);
+  // }
 
   fetchCompletedViolations() async{
     try{

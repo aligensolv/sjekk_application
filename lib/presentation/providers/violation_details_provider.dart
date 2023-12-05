@@ -39,11 +39,12 @@ class ViolationDetailsProvider extends ChangeNotifier{
 
   Future addImage(String path) async{
     try{
-      final String imageSource = await _violationRepositoryImpl.addImage(violation.id, path);
+      final String imageSource = await _violationRepositoryImpl.addImage(violation.id!, path);
       CarImage carImage = CarImage.fromString(imageSource);
       violation.carImages.add(carImage);
       clear();
     }catch(error){
+      print(error.toString());
       errorState = true;
       errorMessage = error.toString();
     }
@@ -53,7 +54,7 @@ class ViolationDetailsProvider extends ChangeNotifier{
 
     Future addRule(String id) async{
     try{
-      final Rule rule = await _violationRepositoryImpl.addRule(violation.id, id);
+      final Rule rule = await _violationRepositoryImpl.addRule(violation.id!, id);
       violation.rules.add(rule);
       clear();
     }catch(error){
@@ -66,8 +67,21 @@ class ViolationDetailsProvider extends ChangeNotifier{
 
   Future saveInnerComment(String innerComment) async{
     try{
-      String response = await _violationRepositoryImpl.updateInnerComment(violation.id, innerComment);
+      String response = await _violationRepositoryImpl.updateInnerComment(violation.id!, innerComment);
       violation.paperComment = response;
+      clear();
+      notifyListeners();
+    }catch(error){
+      print(error.toString());
+      errorState = true;
+      errorMessage = error.toString();
+    }
+  }
+
+  Future saveOutterComment(String outterComment) async{
+    try{
+      String response = await _violationRepositoryImpl.updateOutterComment(violation.id!, outterComment);
+      violation.outComment = response;
       clear();
       notifyListeners();
     }catch(error){
@@ -76,15 +90,15 @@ class ViolationDetailsProvider extends ChangeNotifier{
     }
   }
 
-  Future saveOutterComment(String outterComment) async{
+  Future completeViolation() async{
     try{
-      String response = await _violationRepositoryImpl.updateOutterComment(violation.id, outterComment);
-      violation.outComment = response;
+      await _violationRepositoryImpl.completeViolation(violation);
       clear();
-      notifyListeners();
     }catch(error){
       errorState = true;
       errorMessage = error.toString();
     }
+
+    notifyListeners();
   }
 }

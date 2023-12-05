@@ -8,10 +8,19 @@ abstract class IViolationRepository{
   Future<List<Violation>> getSavedViolations();
   Future<List<Violation>> getPlaceViolations(String id);
 
-  Future<void> createViolation(BuildContext context);
-  Future<Violation> saveViolation(BuildContext context);
+  Future<void> createViolation({
+    required Violation violation,
+    required Place place,
+    required List<String> selectedRules
+  });
+    Future<void> completeViolation(Violation violation);
 
-  Future<void> completeViolation(Violation violation);
+  Future<Violation> saveViolation({
+    required Violation violation,
+    required Place place,
+    required List<String> selectedRules
+  });
+
 
   Future<void> deleteViolation(Violation violation);
 

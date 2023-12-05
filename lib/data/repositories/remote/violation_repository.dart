@@ -106,18 +106,19 @@ class ViolationRepositoryImpl extends IViolationRepository{
   }
   
   @override
-  Future<void> createViolation(BuildContext context) async{
+  Future<void> createViolation({
+    required Violation violation,
+    required Place place,
+    required List<String> selectedRules
+  }) async{
     try{
-      final createViolationProvider = Provider.of<CreateViolationProvider>(context,listen: false);
-      final ruleProvider = Provider.of<RuleProvider>(context, listen: false);
-      final placeProvider = Provider.of<PlaceProvider>(context, listen: false);
 
       final cacheRepository = CacheRepositoryImpl.instance;
 
       final Uri uri = Uri.parse("$baseUrl/violations");
       var request = http.MultipartRequest('POST', uri);
 
-      for(final image in createViolationProvider.carImages){
+      for(final image in violation.carImages){
         request.files.add(await http.MultipartFile.fromPath(image.path, image.path));
       }      
 
@@ -127,14 +128,16 @@ class ViolationRepositoryImpl extends IViolationRepository{
       });
 
       request.fields.addAll({
-        'plate_info': jsonEncode(createViolationProvider.plateInfo!.toJson()),
-        'registered_car_info': jsonEncode(createViolationProvider.registeredCar!.toJson()),
+        'plate_info': jsonEncode(violation.plateInfo.toJson()),
+        'registered_car_info': jsonEncode(violation.registeredCar!.toJson()),
         'status': 'completed',
-        'rules': jsonEncode(ruleProvider.selected),
-        'place': placeProvider.selectedPlace!.id,
-        'paper_comment': createViolationProvider.paper_comment,
-        'out_comment': createViolationProvider.out_comment,
-        'is_car_registered': jsonEncode(createViolationProvider.isRegistered)
+        'rules': jsonEncode(selectedRules),
+        'place': place.id,
+        'paper_comment': violation.paperComment,
+        'created_at':violation.createdAt,
+        'completed_at': DateTime.now().toLocal().toString(),
+        'out_comment': violation.outComment,
+        'is_car_registered': jsonEncode(violation.is_car_registered)
       });
 
             var response = await request.send();
@@ -150,20 +153,42 @@ class ViolationRepositoryImpl extends IViolationRepository{
       rethrow;
     }
   }
+
+   @override
+  Future<void> completeViolation(Violation violation) async{
+    try{
+      final uri = Uri.parse('$baseUrl/violations/${violation.id}/complete');
+      String? token = await CacheRepositoryImpl.instance.get('token');
+
+      final response = await http.put(
+        uri,
+        headers: BuildHeaders().supportJson().add('token', token.toString()).finish() ,
+      );
+
+      if(response.statusCode == 200){
+        return;
+      }else{
+        Map decoded = jsonDecode(response.body);
+        throw decoded['error'];
+      }
+    }catch(error){
+      rethrow;
+    }
+  }
   
   @override
-  Future<Violation> saveViolation(BuildContext context) async{
+  Future<Violation> saveViolation({
+    required Violation violation,
+    required Place place,
+    required List<String> selectedRules
+  }) async{
     try{
-      final createViolationProvider = Provider.of<CreateViolationProvider>(context,listen: false);
-      final ruleProvider = Provider.of<RuleProvider>(context, listen: false);
-      final placeProvider = Provider.of<PlaceProvider>(context, listen: false);
-
       final cacheRepository = CacheRepositoryImpl.instance;
 
       final Uri uri = Uri.parse("$baseUrl/violations");
       var request = http.MultipartRequest('POST', uri);
 
-      for(final image in createViolationProvider.carImages){
+      for(final image in violation.carImages){
         request.files.add(await http.MultipartFile.fromPath(image.path, image.path));
       }      
 
@@ -173,15 +198,15 @@ class ViolationRepositoryImpl extends IViolationRepository{
       });
 
       request.fields.addAll({
-        'plate_info': jsonEncode(createViolationProvider.plateInfo!.toJson()),
-        'registered_car_info': createViolationProvider.registeredCar == null ? 
-          'null' : jsonEncode(createViolationProvider.registeredCar!.toJson()),
+        'plate_info': jsonEncode(violation.plateInfo.toJson()),
+        'registered_car_info': jsonEncode(violation.registeredCar!.toJson()),
         'status': 'saved',
-        'rules': jsonEncode(ruleProvider.selected),
-        'place': placeProvider.selectedPlace!.id,
-        'paper_comment': createViolationProvider.paper_comment,
-        'out_comment': createViolationProvider.out_comment,
-        'is_car_registered': jsonEncode(createViolationProvider.isRegistered)
+        'rules': jsonEncode(selectedRules),
+        'place': place.id,
+        'paper_comment': violation.paperComment,
+        'created_at':violation.createdAt,
+        'out_comment': violation.outComment,
+        'is_car_registered': jsonEncode(violation.is_car_registered)
       });
 
 
@@ -206,27 +231,27 @@ class ViolationRepositoryImpl extends IViolationRepository{
     }
   }
   
-  @override
-  Future<void> completeViolation(Violation violation) async{
-    try{
-      final uri = Uri.parse('$baseUrl/violations/${violation.id}/complete');
-      String? token = await CacheRepositoryImpl.instance.get('token');
+  // @override
+  // Future<void> completeViolation(Violation violation) async{
+  //   try{
+  //     final uri = Uri.parse('$baseUrl/violations/${violation.id}/complete');
+  //     String? token = await CacheRepositoryImpl.instance.get('token');
 
-      final response = await http.put(
-        uri,
-        headers: BuildHeaders().supportJson().add('token', token.toString()).finish() ,
-      );
+  //     final response = await http.put(
+  //       uri,
+  //       headers: BuildHeaders().supportJson().add('token', token.toString()).finish() ,
+  //     );
 
-      if(response.statusCode == 200){
-        return;
-      }else{
-        Map decoded = jsonDecode(response.body);
-        throw decoded['error'];
-      }
-    }catch(error){
-      rethrow;
-    }
-  }
+  //     if(response.statusCode == 200){
+  //       return;
+  //     }else{
+  //       Map decoded = jsonDecode(response.body);
+  //       throw decoded['error'];
+  //     }
+  //   }catch(error){
+  //     rethrow;
+  //   }
+  // }
   
   @override
   Future<String> addImage(String id, String image) async{
@@ -244,6 +269,7 @@ class ViolationRepositoryImpl extends IViolationRepository{
       });
 
                 var response = await request.send();
+
       print(response.statusCode);
       if (response.statusCode == 200) {
         return await response.stream.bytesToString();

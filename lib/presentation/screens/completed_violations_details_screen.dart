@@ -269,14 +269,9 @@ Widget RulesWidget(){
                   onTap: (){
           
                   },
-                  child: Container(
-                    height: 40,
-                    margin: EdgeInsets.only(bottom: 8.0),
-                    alignment: Alignment.center,
-                    child: Text('${rule.name} - ${rule.charge}',),
-                    decoration: BoxDecoration(
-                      color: Colors.black12
-                    ),
+                  child: TemplateTileContainerCardWithExpandedIcon(
+                    title: '${rule.name} - ${rule.charge}',
+                    icon: Icons.euro,
                   ),
                 );
               }),

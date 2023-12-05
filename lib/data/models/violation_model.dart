@@ -9,7 +9,7 @@ class Violation{
   final String status;
   final String createdAt;
   final String? completedAt;
-  final String id;
+  String? id;
   final bool is_car_registered;
   final PlateInfo plateInfo;
   final RegisteredCar? registeredCar;
@@ -22,7 +22,7 @@ class Violation{
     required this.rules,
     required this.status, 
     required this.createdAt, 
-    required this.id,
+    this.id,
     required this.plateInfo,
     required this.carImages,
     required this.place,

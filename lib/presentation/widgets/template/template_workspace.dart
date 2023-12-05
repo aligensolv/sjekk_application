@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/data/models/car_image_model.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_dialog.dart';
@@ -20,13 +21,66 @@ class TemplateWorkspace extends StatefulWidget {
 }
 
 class _TemplateWorkspaceState extends State<TemplateWorkspace> {
+  final MethodChannel _channel = MethodChannel('template_workspace');
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black12,
-      body: Padding(
-        padding: EdgeInsets.all(12.0),
-        child: ListView(
+    return DefaultTabController(
+      length: 2,
+      initialIndex: 0,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: Colors.black12,
+          body: Padding(
+            padding: EdgeInsets.all(12.0),
+            child: Column(
+              children: [
+                TabBar(
+                  tabs: [
+                    Tab(text: 'Components',),
+                    Tab(text: 'Logic',),
+                  ],
+                ),
+                12.h,
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      ComponentsWidget(),
+                      LogicWidget()
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget LogicWidget() {
+    return ListView(
+      children: [
+        TemplateContainerCard(
+          title: 'METHOD CHANNEL GET BATTERY LEVEL',
+          onTap: () async{
+            final result = await _channel.invokeMethod('get_battery_status');
+            print(result);
+          },
+        ),
+        12.h,
+        TemplateContainerCard(
+          title: 'METHOD CHANNEL OPEN CAMERA',
+          onTap: () async{
+            final result = await _channel.invokeMethod('open_camera');
+            print(result);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget ComponentsWidget(){
+    return ListView(
           children: [
             TemplateHeadlineText('Button Components'),
             12.h,
@@ -282,8 +336,6 @@ class _TemplateWorkspaceState extends State<TemplateWorkspace> {
             12.h,
             TemplateSlotsHolder(length: 6, type: SlotType.square,)
           ],
-        ),
-      ),
-    );
+        );
   }
 }

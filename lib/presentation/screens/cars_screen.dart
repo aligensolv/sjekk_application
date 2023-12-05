@@ -24,65 +24,68 @@ class _BoardsScreenState extends State<BoardsScreen> {
   }
 
   void initializeBoards() async {
-    Place place = Provider.of<PlaceProvider>(context, listen: false).selectedPlace!;
-    await Provider.of<CarProvider>(context, listen: false).fetchCarsByPlace(place);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async{
+      Place place = Provider.of<PlaceProvider>(context, listen: false).selectedPlace!;
+      await Provider.of<CarProvider>(context, listen: false).fetchCarsByPlace(place);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: scaffoldColor,
-
-      body: Padding(
-        padding: EdgeInsets.all(12.0),
-        child: Consumer<CarProvider>(
-          builder: (BuildContext context, CarProvider value, Widget? child) {
-            if (value.loadingState) {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-
-            if (value.errorState) {
-              return Center(
-                child: Text(
-                  value.errorMessage,
-                  style: TextStyle(
-                    fontSize: 18,
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: scaffoldColor,
+    
+        body: Padding(
+          padding: EdgeInsets.all(12.0),
+          child: Consumer<CarProvider>(
+            builder: (BuildContext context, CarProvider value, Widget? child) {
+              if (value.loadingState) {
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+    
+              if (value.errorState) {
+                return Center(
+                  child: Text(
+                    value.errorMessage,
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
                   ),
+                );
+              }
+    
+              if (value.cars.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No cars available',
+                    style: TextStyle(
+                      color: ThemeHelper.textColor,
+                      fontSize: 24,
+                    ),
+                  ),
+                );
+              }
+    
+              List<RegisteredCar> cars = value.cars;
+    
+              return Container(
+                child: ListView.separated(
+                  separatorBuilder: (context,index){
+                    return 12.h;
+                  },
+                  itemCount: cars.length,
+                  itemBuilder: ((context, index) {
+                    RegisteredCar car = cars[index];
+              
+                    return RegisteredCarInfo(registeredCar: car);
+                  }),
                 ),
               );
-            }
-
-            if (value.cars.isEmpty) {
-              return Center(
-                child: Text(
-                  'No cars available',
-                  style: TextStyle(
-                    color: ThemeHelper.textColor,
-                    fontSize: 24,
-                  ),
-                ),
-              );
-            }
-
-            List<RegisteredCar> cars = value.cars;
-
-            return Container(
-              margin: EdgeInsets.only(top: 24),
-              child: ListView.separated(
-                separatorBuilder: (context,index){
-                  return 12.h;
-                },
-                itemCount: cars.length,
-                itemBuilder: ((context, index) {
-                  RegisteredCar car = cars[index];
-            
-                  return RegisteredCarInfo(registeredCar: car);
-                }),
-              ),
-            );
-          },
+            },
+          ),
         ),
       ),
     );

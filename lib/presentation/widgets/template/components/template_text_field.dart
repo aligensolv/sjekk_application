@@ -4,8 +4,8 @@ import '../theme/text_field_theme.dart';
 
 
 class NormalTemplateTextField extends StatelessWidget {
-    final Function(String)? onChanged;
-  final TextEditingController? controller;
+    Function(String)? onChanged;
+   TextEditingController? controller;
   final String hintText;
   final int? lines;
   bool? isReadOnly;

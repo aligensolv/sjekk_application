@@ -32,61 +32,92 @@ class _PlaceViolationsState extends State<PlaceViolations> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: scaffoldColor,
-      body: Padding(
-        padding: EdgeInsets.all(12.0),
-        child: Consumer<ViolationProvider>(
-          builder: (BuildContext context, ViolationProvider value,
-              Widget? child) {
-            if (value.loadingState) {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-
-            if (value.errorState) {
-              return Center(
-                child: Text(
-                  value.errorMessage,
-                  style: TextStyle(
-                    fontSize: 24,
-                    color: Colors.red,
+    return SafeArea(
+      child: DefaultTabController(
+        initialIndex: 0,
+        length: 2,
+        child: Scaffold(
+          backgroundColor: scaffoldColor,
+          body: Consumer<ViolationProvider>(
+            builder: (BuildContext context, ViolationProvider value,
+                Widget? child) {
+              if (value.loadingState) {
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+          
+              if (value.errorState) {
+                return Center(
+                  child: Text(
+                    value.errorMessage,
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: Colors.red,
+                    ),
                   ),
-                ),
-              );
-            }
-
-            if (value.currentPlaceViolations.isEmpty) {
-              return Center(
-                child: Text(
-                  'No Violations Yet',
-                  style: TextStyle(
-                    fontSize: 24,
-                    color: Colors.grey,
+                );
+              }
+          
+              if (value.currentPlaceViolations.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No Violations Yet',
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: Colors.grey,
+                    ),
                   ),
+                );
+              }
+          
+              List<Violation> violations = value.currentPlaceViolations;
+              return Column(
+                children: [
+                  TabBar(
+                    tabs: [
+                    Tab(
+                  text: 'Saved',
                 ),
-              );
-            }
+                    Tab(
+                  text: 'Completed',
+                ),
+                    ],
+                  ),
 
-            List<Violation> violations = value.currentPlaceViolations;
-            return Container(
-              margin: EdgeInsets.only(top: 24),
-              child: ListView.separated(
-                separatorBuilder: (context, index) {
-                  return SizedBox(height: 12,);
-                },
-                itemCount: violations.length,
-                itemBuilder: (context, index) {
-                  Violation violation = violations[index];
-            
-                  return PlaceRegisteredVL(vl: violation);
-                },
-              ),
-            );
-          },
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: TabBarView(
+                        children: [
+                          _buildViolations(violations.where((element) => element.status == 'saved').toList()),
+                          _buildViolations(violations.where((element) => element.status == 'completed').toList()),
+                        ],
+                      ),
+                    ),
+                  )
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
+  }
+
+  Widget _buildViolations(List<Violation> violations){
+    return Container(
+                  child: ListView.separated(
+                    separatorBuilder: (context, index) {
+                      return SizedBox(height: 12,);
+                    },
+                    itemCount: violations.length,
+                    itemBuilder: (context, index) {
+                      Violation violation = violations[index];
+                
+                      return PlaceRegisteredVL(vl: violation);
+                    },
+                  ),
+                );
   }
 }

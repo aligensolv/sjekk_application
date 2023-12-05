@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/data/models/printer_model.dart';
 import 'package:sjekk_application/data/repositories/local/printer_repositories.dart';
+import 'package:sjekk_application/presentation/providers/printer_provider.dart';
+import 'package:sjekk_application/presentation/screens/printers_settings.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_dialog.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text_field.dart';
@@ -40,10 +43,11 @@ class _AddPrinterTestState extends State<AddPrinterTest> {
               controller: addressController,
               hintText: 'Address',
             ),
-            SizedBox(height: 32),
+            12.h,
             NormalTemplateButton(
               onPressed: () async{
                 await _showConfirmationDialog();
+                Navigator.pop(context);
               },
               text:'Create',
               width: double.infinity,
@@ -61,16 +65,21 @@ class _AddPrinterTestState extends State<AddPrinterTest> {
       builder: (BuildContext context) {
         return TemplateConfirmationDialog(
           onConfirmation: () async{
-                PrinterRepository printerRepository = PrinterRepository();
                 Printer printer = Printer(
                   address: addressController.text,
                   name: nameController.text
                 );
-                await printerRepository.createPriner(printer);
-                Navigator.of(context).pop(); // Close the dialog
 
+                final provider = Provider.of<PrinterProvider>(context,listen: false);
+                await provider.createPrinter(printer);
+
+                if(provider.errorState){
+                  SnackbarUtils.showSnackbar(context, provider.errorMessage, type: SnackBarType.failure);
+                  return;
+                }
+                
+                Navigator.of(context).pop();
                 SnackbarUtils.showSnackbar(context, 'Printer created successfully',type: SnackBarType.success);
-
           }, 
           title: 'Confirmation', 
           message: 'Are you sure you want to create this printer?'
