@@ -17,12 +17,14 @@ class Violation{
   final List<CarImage> carImages;
   String paperComment;
   String outComment;
+  final String? printPaper;
 
   Violation({
     required this.rules,
     required this.status, 
     required this.createdAt, 
     this.id,
+    this.printPaper,
     required this.plateInfo,
     required this.carImages,
     required this.place,
@@ -52,6 +54,7 @@ class Violation{
       place: Place.fromJson(data['place']),
       paperComment: data['paper_comment'],
       outComment: data['out_comment'],
+      printPaper: data['print_paper'],
       is_car_registered: data['is_car_registered'],
       registeredCar: data['registered_car_info'] != null ? RegisteredCar.fromJson(data['registered_car_info']) : null,
     );

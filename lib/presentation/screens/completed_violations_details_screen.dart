@@ -1,30 +1,17 @@
-import 'dart:async';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sjekk_application/core/constants/app_images.dart';
-import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/presentation/providers/violation_details_provider.dart';
-import 'package:sjekk_application/presentation/screens/select_rule_screen.dart';
-import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
-
-import '../../data/models/car_image_model.dart';
-import '../../data/models/print_option_model.dart';
 import '../../data/models/rule_model.dart';
 import '../../data/models/violation_model.dart';
-import '../providers/create_violation_provider.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/template/components/template_dialog.dart';
 import '../widgets/template/components/template_image.dart';
 import '../widgets/template/components/template_text_field.dart';
 import 'gallery_view.dart';
-import 'place_home.dart';
 
 class CompletedViolationDetailsScreen extends StatefulWidget {
   final Violation violation;
@@ -36,26 +23,25 @@ class CompletedViolationDetailsScreen extends StatefulWidget {
 }
 
 class _CompletedViolationDetailsScreenState extends State<CompletedViolationDetailsScreen> {
+          final TextEditingController innerController = TextEditingController();
+        final TextEditingController outterController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-            DateTime parsedCreatedAt = DateTime.parse(widget.violation.createdAt);
-    if(DateTime.now().difference(parsedCreatedAt).inMinutes < 6){
-                  initializeCounter();
-
-    }
+    final violationDetailsProvider = Provider.of<ViolationDetailsProvider>(context,listen: false);
+    innerController.text = violationDetailsProvider.violation.paperComment;
+    outterController.text = violationDetailsProvider.violation.outComment;
   }
 
-  void initializeCounter() {
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        
-      });
-    });
+  @override
+  void dispose() {
+    innerController.dispose();
+    outterController.dispose();
+    super.dispose();
   }
   @override
   Widget build(BuildContext context) {
-        DateTime parsedCreatedAt = DateTime.parse(widget.violation.createdAt);
     return DefaultTabController(
       initialIndex: 0,
       length: 5,
@@ -63,7 +49,7 @@ class _CompletedViolationDetailsScreenState extends State<CompletedViolationDeta
         body: Column(
           children: [
             24.h,
-            TabBar(
+            const TabBar(
             tabs: <Widget>[
               Tab(
                 icon: Icon(Icons.info_outline),
@@ -103,10 +89,8 @@ class _CompletedViolationDetailsScreenState extends State<CompletedViolationDeta
     Widget CommentsWidget(){
     return Consumer<ViolationDetailsProvider>(
       builder: (BuildContext context, ViolationDetailsProvider violationDetailsProvider, Widget? child) {  
-        final TextEditingController innerController = TextEditingController(text: violationDetailsProvider.violation.paperComment);
-        final TextEditingController outterController = TextEditingController(text: violationDetailsProvider.violation.outComment);
         return Padding(
-          padding: EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -171,16 +155,16 @@ Widget CarInfoWidget() {
 
 Widget _buildInfoContainer(String title, String value) {
   return Container(
-    margin: EdgeInsets.only(bottom: 12),
-    decoration: BoxDecoration(
+    margin: const EdgeInsets.only(bottom: 12),
+    decoration: const BoxDecoration(
       color: Colors.black12,
     ),
     child: Row(
       children: [
         Container(
-          padding: EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12.0),
           alignment: Alignment.center,
-          child: Icon(Icons.info_outline,size: 30,color: Colors.white,),
+          child: const Icon(Icons.info_outline,size: 30,color: Colors.white,),
           color: primaryColor,
           height:60,
           width: 60,
@@ -270,7 +254,7 @@ Widget RulesWidget(){
           
                   },
                   child: TemplateTileContainerCardWithExpandedIcon(
-                    title: '${rule.name} - ${rule.charge}',
+                    title: '${rule.name} (${rule.charge} \$)',
                     icon: Icons.euro,
                   ),
                 );
@@ -297,7 +281,8 @@ Widget PrintWidget(){
           child: Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(AppImages.gensolv)
+                image: widget.violation.printPaper != null ? 
+                CachedNetworkImageProvider(widget.violation.printPaper!) as ImageProvider: const AssetImage(AppImages.gensolv)
               )
             ),
           ),

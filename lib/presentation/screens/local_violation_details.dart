@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:math';
 
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -34,9 +37,9 @@ import 'local_select_rule_screen.dart';
 import 'place_home.dart';
 
 class LocalViolationDetailsScreen extends StatefulWidget {
-  final Violation violation;
+  static const String route = "local_violation_details_screen";
 
-  const LocalViolationDetailsScreen({Key? key, required this.violation}) : super(key: key);
+  // const LocalViolationDetailsScreen({Key? key, required this.violation}) : super(key: key);
 
   @override
   State<LocalViolationDetailsScreen> createState() => _LocalViolationDetailsScreenState();
@@ -44,33 +47,56 @@ class LocalViolationDetailsScreen extends StatefulWidget {
 
 class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScreen> {
 
+  TextEditingController innerController = TextEditingController();
+  TextEditingController outterController = TextEditingController();
+
+  Future<bool> localViolationDetailsBack(bool stopDefaultButtonEvent, RouteInfo info) async{
+    print(info.currentRoute(context));
+    context.read<LocalViolationDetailsProvider>().cancelPrintTimer();
+    if(info.currentRoute(context)!.settings.name != LocalViolationDetailsScreen.route){
+      return false;
+    }
+
+    return true;
+  }
+
+        
   @override
   void initState() {
     super.initState();
-    DateTime parsedCreatedAt = DateTime.parse(widget.violation.createdAt);
-    if(DateTime.now().difference(parsedCreatedAt).inMinutes < 6){
-      initializeCounter();
+    BackButtonInterceptor.add(localViolationDetailsBack,zIndex: 2,context: context);
+        final provider = Provider.of<LocalViolationDetailsProvider>(context,listen: false);
+
+    DateTime parsedCreatedAt = DateTime.parse(provider.localViolationCopy.createdAt);
+      int maxTimePolicy = 0;
+      if(provider.localViolationCopy.rules.any((element) => element.timePolicy > 0)){
+        maxTimePolicy = provider.localViolationCopy.rules.map((e){
+          print(e.timePolicy.toString());
+          return e.timePolicy;
+        }).reduce(max);
+      }
+
+      print(maxTimePolicy);
+    if(DateTime.now().difference(parsedCreatedAt).inMinutes < maxTimePolicy){
+      Provider.of<LocalViolationDetailsProvider>(context, listen: false).updateTimePolicy();
     }
+  final localViolationDetailsProvider = Provider.of<LocalViolationDetailsProvider>(context, listen: false);
+    
+        innerController.text = localViolationDetailsProvider.localViolationCopy.paperComment;
+        outterController.text = localViolationDetailsProvider.localViolationCopy.outComment;
   }
 
-  Timer? _timer;
-
-  void initializeCounter() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        
-      });
-    });
-  }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    BackButtonInterceptor.remove(localViolationDetailsBack);
+    print('i was dispoosed');
+    innerController.dispose();
+    outterController.dispose();
     super.dispose();
   }
   @override
   Widget build(BuildContext context) {
-        DateTime parsedCreatedAt = DateTime.parse(widget.violation.createdAt);
     return DefaultTabController(
       initialIndex: 0,
       length: 5,
@@ -118,11 +144,6 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
   Widget CommentsWidget(){
     return Consumer<LocalViolationDetailsProvider>(
       builder: (BuildContext context, LocalViolationDetailsProvider localViolationDetailsProvider, Widget? child) {  
-        TextEditingController innerController = TextEditingController();
-        TextEditingController outterController = TextEditingController();
-
-        innerController.text = localViolationDetailsProvider.localViolationCopy.paperComment;
-        outterController.text = localViolationDetailsProvider.localViolationCopy.outComment;
         return Padding(
           padding: EdgeInsets.all(12.0),
           child: Column(
@@ -199,15 +220,33 @@ Widget CarInfoWidget() {
           Row(
             children: [
               Expanded(
-                child: TemplateContainerCard(
-                  title: widget.violation.plateInfo.plate,
-                  height: 40,
+                              child: NormalTemplateButton(
+                                            onPressed: () async{
+                                              final createViolationProvider = Provider.of<CreateViolationProvider>(context, listen: false);
+                                              await createViolationProvider.setSavedViolation(
+                                                s_violation: context.read<LocalViolationDetailsProvider>().localViolationCopy
+                                              );
+                                              await createViolationProvider.saveViolation(
+
+                                              );
+
+                                              if(createViolationProvider.errorState && createViolationProvider.errorType == CreateViolationProviderErrorType.saving_error){
+                                                SnackbarUtils.showSnackbar(context, createViolationProvider.errorMessage,type: SnackBarType.failure);
+                                              }else{
+                                                SnackbarUtils.showSnackbar(context, 'VL was saved', type: SnackBarType.info);
+                                                Navigator.popUntil(
+                                                  context, 
+                                                  (route) => route.settings.name == PlaceHome.route
+                                                );
+                                              }
+                                            }, 
+                                            backgroundColor: Colors.green,
   
-                  backgroundColor: widget.violation.is_car_registered ? Colors.blue : Colors.red,
-                ),
-              ),
-              12.w,
-                            Expanded(
+                                            text: 'SAVE'
+                                          ),
+                            ),
+                            12.w,
+              Expanded(
                               child: InfoTemplateButton(
                                             onPressed: () async{
                                               Navigator.pop(context);
@@ -218,21 +257,29 @@ Widget CarInfoWidget() {
             ],
           ),
           12.h,
-                              _buildInfoContainer('Type', widget.violation.plateInfo.type),
-          _buildInfoContainer('Status', widget.violation.status),
-          _buildInfoContainer('Brand', widget.violation.plateInfo.brand),
-          _buildInfoContainer('Year', widget.violation.plateInfo.year),
-          _buildInfoContainer('Description', widget.violation.plateInfo.description),
-          _buildInfoContainer('Created At', widget.violation.createdAt),
+          TemplateContainerCard(
+            title: context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.plate,
+            height: 40,
+  
+            backgroundColor: context.read<LocalViolationDetailsProvider>().localViolationCopy.is_car_registered ? Colors.blue : Colors.red,
+          ),
+          12.w,
+          12.h,
+          _buildInfoContainer('Type', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.type, icon: Icons.category),
+          _buildInfoContainer('Status', context.read<LocalViolationDetailsProvider>().localViolationCopy.status.toUpperCase(), icon: FontAwesome.exclamation),
+          _buildInfoContainer('Brand', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.brand,icon: FontAwesome.car),
+          _buildInfoContainer('Year', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.year, icon: Icons.calendar_month),
+          _buildInfoContainer('Description', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.description, icon: Icons.text_fields),
+          _buildInfoContainer('Created At', context.read<LocalViolationDetailsProvider>().localViolationCopy.createdAt, icon: Icons.date_range),
     
-          if(widget.violation.is_car_registered && widget.violation.registeredCar != null)
+          if(context.read<LocalViolationDetailsProvider>().localViolationCopy.is_car_registered && context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar != null)
           Column(
             children: [
               TemplateHeadlineText('More Information'),
               12.h,
-              _buildInfoContainer('Regiseration type', widget.violation.registeredCar!.registerationType),
-              _buildInfoContainer('Fra', widget.violation.registeredCar!.startDate),
-              _buildInfoContainer('Til', widget.violation.registeredCar!.endDate)
+              _buildInfoContainer('Regiseration type', context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar!.registerationType),
+              _buildInfoContainer('Fra', context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar!.startDate),
+              _buildInfoContainer('Til', context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar!.endDate)
             ],
           )
         ],
@@ -241,7 +288,7 @@ Widget CarInfoWidget() {
   );
 }
 
-Widget _buildInfoContainer(String title, String value) {
+Widget _buildInfoContainer(String title, String value, {IconData? icon = Icons.info_outline}) {
   return Container(
     margin: EdgeInsets.only(bottom: 12),
     decoration: BoxDecoration(
@@ -252,7 +299,7 @@ Widget _buildInfoContainer(String title, String value) {
         Container(
           padding: EdgeInsets.all(12.0),
           alignment: Alignment.center,
-          child: Icon(Icons.info_outline,size: 30,color: Colors.white,),
+          child: Icon(icon,size: 30,color: Colors.white,),
           color: primaryColor,
           height:60,
           width: 60,
@@ -318,19 +365,18 @@ Widget ImagesWidget(){
         ),
         12.h,
 
-        Align(
-          alignment: Alignment.centerRight,
-          child: NormalTemplateButton(
-            text: 'ADD',
-            onPressed: () async{
-              ImagePicker imagePicker = ImagePicker();
-              XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
-              if(file != null){
+        NormalTemplateButton(
+          text: 'ADD IMAGE',
+          width: double.infinity,
+          backgroundColor: Colors.green,
+          onPressed: () async{
+            ImagePicker imagePicker = ImagePicker();
+            XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
+            if(file != null){
 
-                await localViolationDetailsProvider.pushImage(file.path);
-              }
-            },
-          ),
+              await localViolationDetailsProvider.pushImage(file.path);
+            }
+          },
         )
       ],
     ),
@@ -348,9 +394,12 @@ Widget RulesWidget(){
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
               padding: EdgeInsets.zero,
               itemCount: localViolationDetailsProvider.localViolationCopy.rules.length,
+              separatorBuilder: (context,index){
+                return 12.h;
+              },
               itemBuilder: ((context, index) {
                 Rule rule = localViolationDetailsProvider.localViolationCopy.rules[index];
                 return GestureDetector(
@@ -368,16 +417,15 @@ Widget RulesWidget(){
           ),
 
           12.h,
-          Align(
-            alignment: Alignment.centerRight,
-            child: NormalTemplateButton(
-              text: 'ADD RULE',
-              onPressed: (){
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => LocalSelectRuleScreen())
-                );
-              },
-            ),
+          NormalTemplateButton(
+            text: 'ADD RULE',
+            width: double.infinity,
+            backgroundColor: Colors.green,
+            onPressed: (){
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => LocalSelectRuleScreen())
+              );
+            },
           )
         ],
       ),
@@ -392,24 +440,29 @@ Widget PrintWidget(){
 
   return Consumer<LocalViolationDetailsProvider>(
     builder: (BuildContext context, LocalViolationDetailsProvider localViolationDetailsProvider, Widget? child) { 
-      DateTime parsedCreatedAt = DateTime.parse(localViolationDetailsProvider.localViolationCopy.createdAt);
+      // DateTime parsedCreatedAt = DateTime.parse(localViolationDetailsProvider.localViolationCopy.createdAt);
+              // final provider = Provider.of<ViolationDetailsProvider>(context,listen: false);
+        // int maxTimePolicy = 0;
+        // if(provider.violation.rules.any((element) => element.timePolicy > 0)){
+        //   maxTimePolicy = provider.violation.rules.map((e) => e.timePolicy).reduce(max);
+        // }
         return Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if(DateTime.now().difference(parsedCreatedAt).inMinutes < 6)
+              if(localViolationDetailsProvider.isTimerActive)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TemplateParagraphText('You Have wait 6 minutes before printing'),
+                  TemplateParagraphText('You Have wait ${localViolationDetailsProvider.maxTimePolicy} minutes before printing'),
                   12.h,
                   TemplateHeadlineText(
-                    'Time passed: ${DateFormat('mm:ss').format(DateTime.fromMillisecondsSinceEpoch(DateTime.now().difference(parsedCreatedAt).inMilliseconds))}'
+                    'Time passed: ${localViolationDetailsProvider.timePassed}'
                   ),
                 ],
               ),
-              if(DateTime.now().difference(parsedCreatedAt).inMinutes < 6)
+              if(localViolationDetailsProvider.isTimerActive)
               24.h,
               Expanded(
                 child: ListView.separated(
@@ -439,40 +492,40 @@ Widget PrintWidget(){
                 ),
               ),
 
-              Align(
-                alignment: Alignment.centerRight,
-                child: Opacity(
-                  opacity: DateTime.now().difference(parsedCreatedAt).inMinutes < 6 ? 0.5 : 1,
-                  child: AbsorbPointer(
-                    absorbing: false ?? DateTime.now().difference(parsedCreatedAt).inMinutes < 6,
-                    child: NormalTemplateButton(onPressed: ()async{
-                      await showDialog(
-                          context: context,
-                          builder: (context){
-                            return TemplateSuccessDialog(
-                              title: 'Printing VL',
-                              message: 'Printing VL And Taking A Picture',
-                              
-                            );
-                          }
-                        );
-
-                        ImagePicker imagePicker = ImagePicker();
-                        XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
-                        if(file != null){
-                          await localViolationDetailsProvider.pushImage(file.path);
-                          await Provider.of<CreateViolationProvider>(context, listen: false).createViolation(
-                            violation: localViolationDetailsProvider.localViolationCopy,
-                            place: localViolationDetailsProvider.localViolationCopy.place,
-                            selectedRules: localViolationDetailsProvider.localViolationCopy.rules.map((e){
-                              return e.id;
-                            }).toList()
+              Opacity(
+                opacity: localViolationDetailsProvider.isTimerActive ? 0.5 : 1,
+                child: AbsorbPointer(
+                  absorbing: localViolationDetailsProvider.isTimerActive,
+                  child: NormalTemplateButton(
+                    width: double.infinity,
+                    backgroundColor: Colors.green,
+                    onPressed: ()async{
+                    await showDialog(
+                        context: context,
+                        builder: (context){
+                          return TemplateSuccessDialog(
+                            title: 'Printing VL',
+                            message: 'Printing VL And Taking A Picture',
+                            
                           );
-                          SnackbarUtils.showSnackbar(context, 'VL is completed');
-                          Navigator.popUntil(context, (route) => route.settings.name == BottomScreenNavigator.route || route.settings.name == PlaceHome.route);
                         }
-                    }, text: 'PRINT',),
-                  ),
+                      );
+
+                      ImagePicker imagePicker = ImagePicker();
+                      XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
+                      if(file != null){
+                        await localViolationDetailsProvider.pushImage(file.path);
+                        await Provider.of<CreateViolationProvider>(context, listen: false).createViolation(
+                          violation: localViolationDetailsProvider.localViolationCopy,
+                          place: localViolationDetailsProvider.localViolationCopy.place,
+                          selectedRules: localViolationDetailsProvider.localViolationCopy.rules.map((e){
+                            return e.id;
+                          }).toList()
+                        );
+                        SnackbarUtils.showSnackbar(context, 'VL is completed');
+                        Navigator.popUntil(context, (route) => route.settings.name == BottomScreenNavigator.route || route.settings.name == PlaceHome.route);
+                      }
+                  }, text: 'PRINT',),
                 ),
               ),
             ],

@@ -21,6 +21,7 @@ import '../providers/violation_details_provider.dart';
 import '../widgets/template/components/template_dialog.dart';
 import 'local_violation_details.dart';
 import 'place_home.dart';
+import 'unknown_plate_result_info.dart';
 import 'violation_details_screen.dart';
 
 class PlateResultController extends StatelessWidget {
@@ -47,16 +48,136 @@ class PlateResultController extends StatelessWidget {
               place: currentPlace,
             );
           }else{
-            return _UnknownCarWidget();
+            return NotRegisteredCarWidget(
+              plateInfo: createViolationProvider.plateInfo!,
+              place: currentPlace,
+            );
           }
         },
       ),
     );
   }
+}
 
-  Widget _UnknownCarWidget() {
-    return Center(
-      child: TemplateHeadlineText('Unknown'),
+class NotRegisteredCarWidget extends StatelessWidget {
+  const NotRegisteredCarWidget({
+    super.key,
+    required this.plateInfo,
+    required this.place
+  });
+
+  final PlateInfo plateInfo;
+  final Place? place;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          12.h,
+          Image.asset(
+            AppImages.cars[plateInfo.brand]
+          ),
+          12.h,
+          TemplateParagraphText(
+            place?.code ?? 'N/A'
+          ),
+          12.h,
+          TemplateParagraphText(
+            place?.location ?? 'N/A'
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: NormalTemplateButton(
+                    onPressed: (){
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => UnknownPlateResultInfo(
+                            plateInfo: plateInfo,
+                            place: place,
+                          )
+                        )
+                      );
+                    },
+                    text: 'INFO',
+                  ),
+                ),
+                12.w,
+                Expanded(
+                  child: InfoTemplateButton(
+                    onPressed: () async{
+                      final placeProvider = Provider.of<PlaceProvider>(context, listen: false);
+                      await Provider.of<CreateViolationProvider>(context,listen: false).setSavedViolation(
+                        place: context.read<PlaceProvider>().selectedPlace
+                      );
+                      Violation? savedViolation = await Provider.of<CreateViolationProvider>(context, listen: false).saveViolation();
+                      if(savedViolation != null){
+                        // await showDialog(
+                        //   context: context,
+                        //   builder: (context){
+                        //     return TemplateSuccessDialog(
+                        //       title: 'Saving VL', 
+                        //       message: 'VL was saved'
+                        //     );
+                        //   }
+                        // );
+                    SnackbarUtils.showSnackbar(context, 'VL was saved', type: SnackBarType.info);
+                    Provider.of<ViolationDetailsProvider>(context, listen: false).setViolation(savedViolation);
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => ViolationDetailsScreen(violation: savedViolation)),
+                      (route) => route.settings.name == PlaceHome.route
+                    );
+                    // Navigator.of(context).popUntil(ModalRoute.withName(PlaceHome.route));
+                  }else{
+                    SnackbarUtils.showSnackbar(context, Provider.of<CreateViolationProvider>(context, listen: false).errorMessage);
+                  }
+                    },
+                    text: 'LARGE',
+                  ),
+                ),
+                12.w,
+                Expanded(
+                  child: NormalTemplateButton(
+                    onPressed: () async{
+                      Violation? violation = Violation(
+                        rules: [], 
+                        status: 'LOCAL', 
+                        createdAt: DateTime.now().toLocal().toString(),
+                        plateInfo: plateInfo, 
+                        carImages: [], 
+                        place: place!, 
+                        paperComment: '', 
+                        outComment: '', 
+                        is_car_registered: true, 
+                        registeredCar: null, 
+                        completedAt: null
+                      );
+                      Provider.of<ViolationDetailsProvider>(context,listen: false).setViolation(violation);
+                      Provider.of<LocalViolationDetailsProvider>(context,listen: false).storeLocalViolationCopy(violation);
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (context) => LocalViolationDetailsScreen(),
+                          settings: RouteSettings(name: LocalViolationDetailsScreen.route)
+                        ),
+                        (route) => route.settings.name == PlaceHome.route
+                      );
+                    },
+                    text: 'OPPRETT',
+                    backgroundColor: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }
@@ -91,7 +212,7 @@ class RegisteredCarWidget extends StatelessWidget {
             fontSize: 36,
           ),
           12.h,
-          const TemplateHeadlineText('Sjekk Parking'),
+          TemplateHeadlineText('Sjekk Parking'),
           12.h,
           TemplateParagraphText('Fra: ${registeredCar.startDate}'),
           12.h,
@@ -129,10 +250,8 @@ class RegisteredCarWidget extends StatelessWidget {
                 Expanded(
                   child: InfoTemplateButton(
                     onPressed: () async{
-                      final placeProvider = Provider.of<PlaceProvider>(context, listen: false);
                       await Provider.of<CreateViolationProvider>(context,listen: false).setSavedViolation(
-                        plateInfo,
-                        placeProvider.selectedPlace!
+                        place: context.read<PlaceProvider>().selectedPlace
                       );
                       Violation? savedViolation = await Provider.of<CreateViolationProvider>(context, listen: false).saveViolation();
                       if(savedViolation != null){
@@ -163,18 +282,6 @@ class RegisteredCarWidget extends StatelessWidget {
                 Expanded(
                   child: NormalTemplateButton(
                     onPressed: () async{
-        //                       'plate_info': jsonEncode(createViolationProvider.plateInfo!.toJson()),
-        // 'registered_car_info': createViolationProvider.registeredCar == null ? 
-        //   'null' : jsonEncode(createViolationProvider.registeredCar!.toJson()),
-        // 'status': 'saved',
-        // 'rules': jsonEncode(ruleProvider.selected),
-        // 'place': placeProvider.selectedPlace!.id,
-        // 'paper_comment': createViolationProvider.paper_comment,
-        // 'out_comment': createViolationProvider.out_comment,
-        // 'is_car_registered': jsonEncode(createViolationProvider.isRegistered)
-                      // CreateViolationProvider createViolationProvider = Provider.of<CreateViolationProvider>(context, listen: false);
-                      // PlaceProvider placeProvider = Provider.of<PlaceProvider>(context, listen: false);
-                      // RuleProvider ruleProvider = Provider.of<RuleProvider>(context, listen: false);
                       Violation? violation = Violation(
                         rules: [], 
                         status: 'LOCAL', 
@@ -191,29 +298,12 @@ class RegisteredCarWidget extends StatelessWidget {
                       Provider.of<ViolationDetailsProvider>(context,listen: false).setViolation(violation);
                       Provider.of<LocalViolationDetailsProvider>(context,listen: false).storeLocalViolationCopy(violation);
                       Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) => LocalViolationDetailsScreen(violation: violation)),
+                        MaterialPageRoute(
+                          builder: (context) => LocalViolationDetailsScreen(),
+                          settings: RouteSettings(name: LocalViolationDetailsScreen.route)
+                        ),
                         (route) => route.settings.name == PlaceHome.route
                       );
-                  //     Violation? savedViolation = await Provider.of<CreateViolationProvider>(context, listen: false).saveViolation(context);
-                  //     if(savedViolation != null){
-                  //       // await showDialog(
-                  //       //   context: context,
-                  //       //   builder: (context){
-                  //       //     return TemplateSuccessDialog(
-                  //       //       title: 'Saving VL', 
-                  //       //       message: 'VL was saved'
-                  //       //     );
-                  //       //   }
-                  //       // );
-                  //   Provider.of<ViolationDetailsProvider>(context, listen: false).setViolation(savedViolation);
-                  //   Navigator.of(context).pushAndRemoveUntil(
-                  //     MaterialPageRoute(builder: (context) => ViolationDetailsScreen(violation: savedViolation)),
-                  //     (route) => route.settings.name == PlaceHome.route
-                  //   );
-                  //   // Navigator.of(context).popUntil(ModalRoute.withName(PlaceHome.route));
-                  // }else{
-                  //   SnackbarUtils.showSnackbar(context, Provider.of<CreateViolationProvider>(context, listen: false).errorMessage);
-                  // }
                     },
                     text: 'OPPRETT',
                     backgroundColor: Colors.green,

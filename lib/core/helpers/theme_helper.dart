@@ -10,7 +10,7 @@ class ThemeHelper {
   static Color accentColor = Color(0xFF000000);
   static Color buttonColor = Color(0xFFffa101);
   static Color? textColor = Colors.grey[700];
-  static Color backgroundColor = Color(0xFFF5F5F5);
+  static Color backgroundColor = Color.fromARGB(255, 214, 206, 206);
 
   static ThemeData AppTheme = ThemeData(
     colorScheme: ColorScheme.fromSeed(seedColor: Colors.red)

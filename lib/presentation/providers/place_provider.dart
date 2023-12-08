@@ -8,7 +8,7 @@ class PlaceProvider extends ChangeNotifier {
   List<Place> originalPlaces = [];
   bool errorState = false;
   String errorMessage = "";
-  bool loadingState = false;
+  // bool loadingState = false;
 
   Place? selectedPlace;
   DateTime? selectedPlaceLoginTime;
@@ -39,8 +39,8 @@ class PlaceProvider extends ChangeNotifier {
 
   fetchPlaces() async {
     try {
-      loadingState = true;
-      notifyListeners();
+      // loadingState = true;
+      // notifyListeners();
 
       PlaceRepositoryImpl placeRepositoryImpl = PlaceRepositoryImpl();
       List<Place> fetchedPlaces = await placeRepositoryImpl.getAllPlaces();
@@ -52,7 +52,7 @@ class PlaceProvider extends ChangeNotifier {
       errorMessage = error.toString();
     }
 
-    loadingState = false;
+    // loadingState = false;
     notifyListeners();
     // clearErrors();
   }

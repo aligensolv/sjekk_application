@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:sjekk_application/data/models/car_image_model.dart';
 import 'package:sjekk_application/data/models/violation_model.dart';
 import 'package:sjekk_application/data/repositories/remote/violation_repository.dart';
@@ -19,6 +23,63 @@ class ViolationDetailsProvider extends ChangeNotifier{
   ];
 
   int selectedPrintOptionIndex = 0;
+
+    Timer? printTimer;
+  int maxTimePolicy = 0;
+  String timePassed = "";
+  bool isTimerActive = false;
+
+  updateTimePolicy(){
+    if(violation.rules.any((element) => element.timePolicy > 0)){
+      print('yes bigger on found');
+      int newMaxTimePolicy = violation.rules.map((e) => e.timePolicy).reduce(max);
+
+      print('max is $newMaxTimePolicy');
+
+      if(newMaxTimePolicy > maxTimePolicy){
+        maxTimePolicy = newMaxTimePolicy;
+        if(printTimer == null || !(printTimer?.isActive ?? false)){
+          createPrintTimer();
+        }
+
+        notifyListeners();
+      }
+    }
+  }
+
+  createPrintTimer(){
+    isTimerActive = true;
+    notifyListeners();
+
+    printTimer = Timer.periodic(
+      Duration(seconds: 1), 
+      (timer) {
+        DateTime parsedCreatedAt = DateTime.parse(violation.createdAt);
+        if(DateTime.now().difference(parsedCreatedAt).inMinutes <= maxTimePolicy){
+          timePassed = DateFormat('mm:ss')
+          .format(DateTime.fromMillisecondsSinceEpoch(DateTime.now().difference(parsedCreatedAt).inMilliseconds));
+
+          notifyListeners();
+        }else{
+          cancelPrintTimer();
+        }
+      }
+    );
+  }
+
+  cancelPrintTimer(){
+    isTimerActive = false;
+    timePassed = "";
+    maxTimePolicy = 0;
+    printTimer?.cancel();
+    notifyListeners();
+  }
+
+  @override
+  dispose(){
+    cancelPrintTimer();
+    super.dispose();
+  }
 
   ViolationRepositoryImpl _violationRepositoryImpl = ViolationRepositoryImpl();
 

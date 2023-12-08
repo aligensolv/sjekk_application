@@ -7,7 +7,10 @@ import 'package:sjekk_application/data/models/user_model.dart';
 import 'package:sjekk_application/presentation/providers/auth_provider.dart';
 import 'package:sjekk_application/presentation/providers/login_provider.dart';
 import 'package:sjekk_application/presentation/providers/shift_provider.dart';
+import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
+import 'package:sjekk_application/presentation/widgets/template/components/template_text_field.dart';
+import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 import '../../data/entities/auth_credentials.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
@@ -39,11 +42,11 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: ThemeHelper.backgroundColor,
         body: Consumer<LoginProvider>(
           builder: (BuildContext context, LoginProvider loginProvider, Widget? child) {
-            if(loginProvider.loadingState){
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+            // if(loginProvider.loadingState){
+            //   return Center(
+            //     child: CircularProgressIndicator(),
+            //   );
+            // }
 
             if(loginProvider.errorState){
               if(context.mounted){
@@ -82,10 +85,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               SizedBox(
                                 height: 12,
                               ),
-                              CustomTextFormField(
-                                prefixIcon: Icons.perm_identity,
+                              SecondaryTemplateTextFieldWithIcon(
+                                icon: Icons.perm_identity,
                                 controller: _idController,
-                                labelAndHint: 'ID',
+                                hintText: 'ID',
                                 validator: (value) {
                                   if (value != null) {
                                     if (value.isEmpty) {
@@ -101,11 +104,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               SizedBox(
                                 height: 20,
                               ),
-                              CustomTextFormField(
-                                prefixIcon: Icons.security,
+                              SecondaryTemplateTextFieldWithIcon(
+                                icon: Icons.security,
                                 controller: _passwordController,
-                                labelAndHint: 'Password',
-                                secure: true,
+                                hintText: 'Password',
+                                secured: true,
                                 validator: (value) {
                                   if (value != null) {
                                     if (value.isEmpty) {
@@ -123,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               Align(
                                 alignment: Alignment.centerRight,
-                                child: BasicButton(
+                                child: NormalTemplateButton(
                                   text: 'Login',
                                   onPressed: () async {
                                     if (_formKey.currentState != null) {

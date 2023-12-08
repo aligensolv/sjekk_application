@@ -48,6 +48,7 @@ class _LocalSelectRuleScreenState extends State<LocalSelectRuleScreen> {
             subtitle: rule.charge.toString(),
             onTap: () async{
               await Provider.of<LocalViolationDetailsProvider>(context, listen: false).pushRule(rule);
+              context.read<LocalViolationDetailsProvider>().updateTimePolicy();
               Navigator.pop(context);
             },
           );

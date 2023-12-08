@@ -6,6 +6,7 @@ import 'package:sjekk_application/data/models/plate_info_model.dart';
 import 'package:sjekk_application/data/models/registered_car_model.dart';
 import 'package:sjekk_application/presentation/screens/place_home.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
+import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/string_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
@@ -17,15 +18,13 @@ import '../providers/create_violation_provider.dart';
 import '../providers/local_violation_details_provider.dart';
 import '../providers/violation_details_provider.dart';
 import '../widgets/template/components/template_dialog.dart';
-import '../widgets/template/components/template_text.dart';
 import 'local_violation_details.dart';
 import 'violation_details_screen.dart';
 
-class PlateResultInfo extends StatelessWidget {
-  const PlateResultInfo({super.key, required this.plateInfo, required this.place, required this.registeredCar});
+class UnknownPlateResultInfo extends StatelessWidget {
+  const UnknownPlateResultInfo({super.key, required this.plateInfo, required this.place});
   final PlateInfo plateInfo;
   final Place? place;
-  final RegisteredCar registeredCar;
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -78,7 +77,7 @@ class PlateResultInfo extends StatelessWidget {
                 ),
               ),
 
-              12.h,
+                12.h,
                             Container(
                 color: Colors.white,
                 padding: EdgeInsets.all(8.0),
@@ -141,7 +140,7 @@ class PlateResultInfo extends StatelessWidget {
                         paperComment: '', 
                         outComment: '', 
                         is_car_registered: true, 
-                        registeredCar: registeredCar, 
+                        registeredCar: null, 
                         completedAt: null
                       );
                       Provider.of<ViolationDetailsProvider>(context,listen: false).setViolation(violation);
@@ -153,26 +152,6 @@ class PlateResultInfo extends StatelessWidget {
                         ),
                         (route) => route.settings.name == PlaceHome.route
                       );
-                  //       Violation? savedViolation = await Provider.of<CreateViolationProvider>(context, listen: false).saveViolation(context);
-                  // if(savedViolation != null){
-                  //   // await showDialog(
-                  //   //   context: context,
-                  //   //   builder: (context){
-                  //   //     return TemplateSuccessDialog(
-                  //   //       title: 'Saving VL', 
-                  //   //       message: 'VL was saved'
-                  //   //     );
-                  //   //   }
-                  //   // );
-                  //   Provider.of<ViolationDetailsProvider>(context, listen: false).setViolation(savedViolation);
-                  //   Navigator.of(context).pushAndRemoveUntil(
-                  //     MaterialPageRoute(builder: (context) => ViolationDetailsScreen(violation: savedViolation)),
-                  //     (route) => route.settings.name == PlaceHome.route
-                  //   );
-                  //   // Navigator.of(context).popUntil(ModalRoute.withName(PlaceHome.route));
-                  // }else{
-                  //   SnackbarUtils.showSnackbar(context, Provider.of<CreateViolationProvider>(context, listen: false).errorMessage);
-                  // }
                       },
                       text: 'OPPRETT',
                     ),

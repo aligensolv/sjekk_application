@@ -6,7 +6,7 @@ import '../../data/repositories/remote/auth_repository_impl.dart';
 
 class LoginProvider extends ChangeNotifier{
   final AuthRepositoryImpl authRepositoryImpl = AuthRepositoryImpl();
-  bool loadingState = false;
+  // bool loadingState = false;
 
   bool errorState = false;
   String errorMessage = "";
@@ -16,14 +16,14 @@ class LoginProvider extends ChangeNotifier{
     errorState = false;
   }
 
-  changeLoadingState(bool state){
-    loadingState = state;
-    notifyListeners();
-  }
+  // changeLoadingState(bool state){
+  //   loadingState = state;
+  //   notifyListeners();
+  // }
 
   Future<User?> login(AuthCredentials authCredentials) async{
     try{
-      changeLoadingState(true);
+      // changeLoadingState(true);
 
       User? user = await authRepositoryImpl.loginUser(authCredentials);
       clearErrors();
@@ -31,7 +31,8 @@ class LoginProvider extends ChangeNotifier{
     }catch(error){
       errorState = true;
       errorMessage = error.toString();
-      changeLoadingState(false);
+      // changeLoadingState(false);
+      notifyListeners();
       return null;
     }
   }

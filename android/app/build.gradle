@@ -58,7 +58,7 @@ android {
 
     defaultConfig {
         // Application ID - see https://developer.android.com/studio/build/application-id.html
-        applicationId "gensolv2.no.app"
+        applicationId "gensolv3.no.app"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()

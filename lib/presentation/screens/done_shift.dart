@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/presentation/providers/shift_provider.dart';
@@ -13,6 +14,8 @@ class DoneShiftScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    DateFormat format = DateFormat("dd HH:mm");
+
     return SafeArea(
       child: Scaffold(
         backgroundColor: scaffoldColor,
@@ -35,7 +38,9 @@ class DoneShiftScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 32.0),
-              Center(child: Text('Start Date: ${ShiftProvider.instance.shift!.startDate}',style: TextStyle(
+              Center(child: Text('Start Date: ${format.format(
+                DateTime.parse(context.read<ShiftProvider>().shift!.startDate)
+              )}',style: TextStyle(
                 fontSize: 18
               ),)),
               SizedBox(height: 32.0),

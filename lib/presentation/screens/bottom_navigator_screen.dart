@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/presentation/screens/settings_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
@@ -25,34 +24,39 @@ class _HomeScreenNavigatorState extends State<BottomScreenNavigator> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: scaffoldColor,
-
-      body: _screens[_currentIndex], // Display the selected screen
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index; // Update the selected tab index
-          });
-        },
-        selectedItemColor: secondaryColor,
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
         backgroundColor: scaffoldColor,
-        elevation: 0,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'HOME',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'SETTINGS',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.more_horiz),
-            label: 'MORE',
-          ),
-        ],
+    
+        body: _screens[_currentIndex], // Display the selected screen
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index; // Update the selected tab index
+            });
+          },
+          selectedItemColor: secondaryColor,
+          backgroundColor: scaffoldColor,
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'HOME',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: 'SETTINGS',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.more_horiz),
+              label: 'MORE',
+            ),
+          ],
+        ),
       ),
     );
   }

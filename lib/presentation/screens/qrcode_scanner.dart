@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:path/path.dart';
 import 'package:sjekk_application/presentation/screens/scan_result_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class QrCodeScanner extends StatefulWidget {
@@ -25,18 +27,21 @@ class _QrCodeScannerState extends State<QrCodeScanner> {
             child: MobileScanner(
               controller: mobileScannerController,
               
+              
               onDetect: (barcode) async {
                 if (barcode.raw == null) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Null")));
                                   mobileScannerController.dispose();
 
                 } else {
-                  final qrCodeValue = barcode.barcodes.first;
-                  mobileScannerController.dispose();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: ((context) => ScanResultScreen(result: qrCodeValue.rawValue.toString(),)))
-                  );
-
+                  final Barcode qrCodeValue = barcode.barcodes.first;
+                  // mobileScannerController.dispose();
+                  if(qrCodeValue.url?.url != null){
+                    Uri uri = Uri.parse(qrCodeValue.url!.url);
+                    if(await canLaunchUrl(uri)){
+                      await launchUrl(uri);
+                    }
+                  }
                 }
               },
             ),

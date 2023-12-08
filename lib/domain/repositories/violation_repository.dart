@@ -17,8 +17,6 @@ abstract class IViolationRepository{
 
   Future<Violation> saveViolation({
     required Violation violation,
-    required Place place,
-    required List<String> selectedRules
   });
 
 

@@ -12,4 +12,10 @@ class AppImages{
     'HYUNDAI': 'assets/cars/Hyundai.png',
     'Unknown': 'assets/cars/Unknown.png'
   };
+
+  static const String vip = "assets/registered_car/vip.png";
+  static const String normal = "assets/registered_car/normal.png";
+  static const String owner = "assets/registered_car/owner.png";
+
+  static const String unknown = "assets/images/unknown.png";
 }

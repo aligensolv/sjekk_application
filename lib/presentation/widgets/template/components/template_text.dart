@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
 
+
 class TemplateHeaderText extends StatelessWidget {
   final String text;
   const TemplateHeaderText(this.text, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Text(text);
+    return Text(text, style: TextStyle(
+      fontSize: 24
+    ),);
   }
 }
 
-
 class TemplateHeadlineText extends StatelessWidget {
   final String text;
-  const TemplateHeadlineText(this.text, {super.key});
+  double? size;
+  TemplateHeadlineText(this.text, {super.key, this.size = 20});
 
   @override
   Widget build(BuildContext context) {
     return Text(text,style: TextStyle(
-      fontSize: 20
+      fontSize: size
     ),);
   }
 }

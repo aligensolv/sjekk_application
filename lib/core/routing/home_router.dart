@@ -49,14 +49,19 @@ class HomeRouter {
         return MaterialPageRoute(builder: (context) => DoneShiftScreen());
 
       case PlacesScreen.route:
-        return MaterialPageRoute(builder: (context) => PlacesScreen());
+        return MaterialPageRoute(
+          builder: (context) => PlacesScreen(),
+          settings: RouteSettings(
+            name: PlacesScreen.route
+          )
+        );
 
       case PlaceDetailsScreen.route:
         return MaterialPageRoute(builder: (context) => PlaceDetailsScreen(place: (settings.arguments as Map)['place'],));
 
       case PlaceHome.route:
         return MaterialPageRoute(
-          builder: (context) => PlaceHome(place: (settings.arguments as Map)['place'],),
+          builder: (context) => PlaceHome(),
           settings: RouteSettings(name: PlaceHome.route)
         );
 

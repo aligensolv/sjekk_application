@@ -40,11 +40,11 @@ class _PrintersSettingsState extends State<PrintersSettings> {
         backgroundColor: scaffoldColor,
         body: Consumer<PrinterProvider>(
           builder: (BuildContext context, PrinterProvider value, Widget? child) { 
-            if(value.loadingState){
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+            // if(value.loadingState){
+            //   return Center(
+            //     child: CircularProgressIndicator(),
+            //   );
+            // }
       
             if(value.errorState){
               return Center(

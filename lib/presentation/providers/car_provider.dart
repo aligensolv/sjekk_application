@@ -5,11 +5,22 @@ import 'package:sjekk_application/data/repositories/remote/car_repository_impl.d
 
 class CarProvider extends ChangeNotifier{
   List<RegisteredCar> cars = [];
-  bool loadingState = false;
+  List<RegisteredCar> originalCars = [];
+
+  // bool loadingState = false;
   bool errorState = false;
   String errorMessage = "";
 
   final CarRepositoryImpl _carRepositoryImpl = CarRepositoryImpl();
+
+    searchCars(String query) {
+    cars = originalCars.where((car){
+      return car.boardNumber.toLowerCase().contains(query.toLowerCase()) || 
+      car.registerationType.toLowerCase().contains(query.toLowerCase());
+    }).toList();
+
+    notifyListeners();
+  }
 
   clearErrors(){
     errorState = false;
@@ -18,8 +29,8 @@ class CarProvider extends ChangeNotifier{
 
   fetchCars() async{
     try{
-      loadingState = true;
-      notifyListeners();
+      // loadingState = true;
+      // notifyListeners();
       
       cars = await _carRepositoryImpl.getAllCars();
       clearErrors();
@@ -28,23 +39,24 @@ class CarProvider extends ChangeNotifier{
       errorMessage = e.toString();
     }
 
-    loadingState = false;
+    // loadingState = false;
     notifyListeners();
   }
 
     fetchCarsByPlace(Place place) async{
     try{
-      loadingState = true;
-      notifyListeners();
+      // loadingState = true;
+      // notifyListeners();
       
       cars = await _carRepositoryImpl.getAllCarsByPlace(place);
+      originalCars = cars;
       clearErrors();
     }catch(e){
       errorState = true;
       errorMessage = e.toString();
     }
 
-    loadingState = false;
+    // loadingState = false;
     notifyListeners();
   }
 }

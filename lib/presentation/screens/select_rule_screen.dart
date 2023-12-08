@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sjekk_application/data/models/rule_model.dart';
 import 'package:sjekk_application/presentation/providers/rule_provider.dart';
 import 'package:sjekk_application/presentation/providers/violation_details_provider.dart';
+import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_list_tile.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 
@@ -40,10 +41,9 @@ class _SelectRuleScreenState extends State<SelectRuleScreen> {
         },
         itemBuilder: (context, index) {
           Rule rule = ruleProvider.rules[index];
-          return TemplateListTile(
-            title: rule.name,
-            
-            subtitle: rule.charge.toString(),
+          return TemplateTileContainerCardWithIcon(
+            title: '${rule.name} (${rule.charge} \$)',
+            icon: Icons.euro,
             onTap: () async{
               await Provider.of<ViolationDetailsProvider>(context, listen: false).addRule(rule.id);
               Navigator.pop(context);

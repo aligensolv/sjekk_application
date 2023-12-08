@@ -5,27 +5,33 @@ import 'package:sjekk_application/data/models/registered_car_model.dart';
 import 'package:sjekk_application/data/models/violation_model.dart';
 import 'package:sjekk_application/data/repositories/remote/car_repository_impl.dart';
 import 'package:sjekk_application/data/repositories/remote/violation_repository.dart';
+import '../../data/models/rule_model.dart';
 import '../../data/repositories/remote/autosys_repository_impl.dart';
 
+
+enum CreateViolationProviderErrorType{
+  saving_error,
+  none
+}
 
 
 class CreateViolationProvider extends ChangeNotifier{
   Violation? savedViolation;
 
-  setSavedViolation(
-    PlateInfo plateInfo,
-    Place place
-  ){
+  setSavedViolation({
+    Violation? s_violation,
+    Place? place
+  }){
     savedViolation = Violation(
-      rules: [], 
+      rules: s_violation?.rules ?? [], 
       status: 'saved', 
       createdAt: DateTime.now().toLocal().toString(), 
-      plateInfo: plateInfo, 
-      carImages: [], 
-      place: place, 
-      paperComment: '', 
-      outComment: '', 
-      is_car_registered: true, 
+      plateInfo: s_violation?.plateInfo ?? plateInfo!, 
+      carImages: s_violation?.carImages ?? [], 
+      place: s_violation?.place ?? place!, 
+      paperComment: s_violation?.paperComment ?? '', 
+      outComment: s_violation?.outComment ?? '', 
+      is_car_registered: registeredCar != null, 
       registeredCar: registeredCar, 
       completedAt: null
     );
@@ -47,6 +53,7 @@ class CreateViolationProvider extends ChangeNotifier{
 
   bool errorState = false;
   String errorMessage = "";
+  CreateViolationProviderErrorType errorType = CreateViolationProviderErrorType.none;
 
   clearErrors(){
     errorState = false;
@@ -63,23 +70,24 @@ class CreateViolationProvider extends ChangeNotifier{
     isRegistered = false;
     plateInfo = null;
     registeredCar = null;
+    errorType = CreateViolationProviderErrorType.none;
 
     notifyListeners();
   }
 
   final _violationRepository = ViolationRepositoryImpl();
   Future<Violation?> saveViolation() async{
+    print(savedViolation);
     try{
       Violation resultSavedViolation = await _violationRepository.saveViolation(
         violation: savedViolation!,
-        place: savedViolation!.place,
-        selectedRules: []
       );
       clearAll();
       return resultSavedViolation;
     }catch(error){
       errorState = true;
       errorMessage = error.toString();
+      errorType = CreateViolationProviderErrorType.saving_error;
       return null;
     }
   }

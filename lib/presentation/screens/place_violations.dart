@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sjekk_application/data/models/violation_model.dart';
@@ -49,12 +50,13 @@ class _PlaceViolationsState extends State<PlaceViolations> {
           
               if (value.errorState) {
                 return Center(
-                  child: Text(
+                  child: AutoSizeText(
                     value.errorMessage,
                     style: TextStyle(
                       fontSize: 24,
                       color: Colors.red,
                     ),
+                    maxLines: 1,
                   ),
                 );
               }

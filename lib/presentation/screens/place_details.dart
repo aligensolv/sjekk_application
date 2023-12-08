@@ -56,9 +56,8 @@ class PlaceDetailsScreen extends StatelessWidget {
                     Provider.of<PlaceProvider>(context, listen: false).startTime = DateTime.now().toLocal();
                     if(context.mounted){
 
-                      Navigator.pushNamed(context, PlaceHome.route,arguments: {
-                        'place': place
-                      });
+                      Navigator.pushNamed(context, PlaceHome.route);
+
                     }
                   },
 

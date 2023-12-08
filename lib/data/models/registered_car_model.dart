@@ -4,6 +4,7 @@ class RegisteredCar{
   final String boardNumber;
   // final String id;
   final String registerationType;
+  final String rank;
   final String startDate;
   final String endDate;
   final String createdAt;
@@ -15,6 +16,7 @@ class RegisteredCar{
     required this.startDate, 
     required this.endDate,
     required this.createdAt,
+    required this.rank
     // required this.place,
     // required this.id
   });
@@ -26,6 +28,7 @@ class RegisteredCar{
       startDate: json["start_date"],
       endDate: json["end_date"],
       createdAt: json["created_at"],
+      rank: json["rank"]
       // id: json['_id'],
       // place: Place.fromJson(json['place'])
     );
@@ -38,6 +41,7 @@ class RegisteredCar{
       'start_date': startDate,
       'end_date': endDate,
       'created_at': createdAt,
+      'rank': rank,
     };
   }
 }

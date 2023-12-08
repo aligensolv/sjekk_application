@@ -10,6 +10,7 @@ import 'package:sjekk_application/core/helpers/sqflite_helper.dart';
 import 'package:sjekk_application/presentation/providers/auth_provider.dart';
 import 'package:sjekk_application/presentation/providers/car_provider.dart';
 import 'package:sjekk_application/presentation/providers/create_violation_provider.dart';
+import 'package:sjekk_application/presentation/providers/keyboard_input_provider.dart';
 import 'package:sjekk_application/presentation/providers/printer_provider.dart';
 import 'package:sjekk_application/presentation/providers/rule_provider.dart';
 import 'package:sjekk_application/presentation/providers/shift_provider.dart';
@@ -24,22 +25,23 @@ import 'package:sjekk_application/presentation/widgets/template/theme/colors_the
 
 import 'data/repositories/local/cache_repository_impl.dart';
 import 'presentation/providers/local_violation_details_provider.dart';
+import 'presentation/wrappers/connectivity_wrapper.dart';
 
 const SCANBOT_SDK_LICENSE_KEY =
-"A5Qo4Gb0iVtBgJzcdjFUr+NOt69e5/" +
-"+Mt3sWs6sx2JC5ciedDq75bmU/w1Jq" +
-"k4jPpk96cuVAjudY5TD5dPOSagzmBI" +
-"O/Qe+cfnIltmexYOejv43a9RmEXKuE" +
-"N3MMlcrTNz9T/jew38syDtegkPvOV/" +
-"Dq+t213XBIU7Ap5viwlI7llJXxfmdx" +
-"hUVrE107rFANR7dXs4RF+ingzESIlv" +
-"XvXpxKOgGuqErD1vUo1K/d+Bh77782" +
-"YHtTtGguonsEIG5LkmVWk2QB/V/GGx" +
-"odyeUFzhFy0xRHQ+/5ZIJJZNdqHgid" +
-"GztBZxSXljmO+FuyLUmnwccG5F4bac" +
-"AdU5oAKmdtXQ==\nU2NhbmJvdFNESw" +
-"pnZW5zb2x2Mi5uby5hcHAKMTcwMTcz" +
-"NDM5OQo4Mzg4NjA3CjE5\n";
+"oxP9Ixf22PAEz5jUGkyhOevAEBVX/l" +
+"UJGklY97nFvJHmuVKWmHf/W6DhOUBF" +
+"1N9/xHFgxmI7Px9f5pLBeHB7i6B85B" +
+"johd34/btPjHvW6LSe3gLEtvO4mzbp" +
+"9fcxvwDKNJkEfev5kIUE4klbdCevG1" +
+"7zXRCit6chvFKfaGmN0oNVGEIA1dL9" +
+"bQwAXb2pFRo4rq0vT5sd1mbEwblgqu" +
+"gkWBx0MV6PsD7wOG7DhaGUhYMcHF/z" +
+"hxDDFqMPBiONN2mCpEEPJkc4mownMh" +
+"1cAGaLqP7QadKR8PH0WR0pOmsV+Vp2" +
+"gYCkUBHRX2C718J/FOCySL8O9NpIJx" +
+"gMWvL7MrfWfw==\nU2NhbmJvdFNESw" +
+"pnZW5zb2x2My5uby5hcHAKMTcwMjQy" +
+"NTU5OQo4Mzg4NjA3CjE5\n";
 
 bool shouldInitWithEncryption = false;
 
@@ -179,13 +181,16 @@ class EntryPoint extends StatelessWidget {
         ChangeNotifierProvider<LocalViolationDetailsProvider>(
           create: (context) => LocalViolationDetailsProvider(),
         ),
+        ChangeNotifierProvider<KeyboardInputProvider>(
+          create: (context) => KeyboardInputProvider(),
+        ),
       ],
       child: MaterialApp(
               navigatorObservers: [ScanbotCamera.scanbotSdkRouteObserver],
         title: 'Sjekk',
         theme: appTheme,
         debugShowCheckedModeBanner: false,
-        home: SplashScreen(),
+        home: ConnectivityWrapper(),
       ),
     );
   }

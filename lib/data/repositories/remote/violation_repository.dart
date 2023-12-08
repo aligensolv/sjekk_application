@@ -129,7 +129,7 @@ class ViolationRepositoryImpl extends IViolationRepository{
 
       request.fields.addAll({
         'plate_info': jsonEncode(violation.plateInfo.toJson()),
-        'registered_car_info': jsonEncode(violation.registeredCar!.toJson()),
+        'registered_car_info': violation.registeredCar == null ? 'null' : jsonEncode(violation.registeredCar!.toJson()),
         'status': 'completed',
         'rules': jsonEncode(selectedRules),
         'place': place.id,
@@ -179,8 +179,6 @@ class ViolationRepositoryImpl extends IViolationRepository{
   @override
   Future<Violation> saveViolation({
     required Violation violation,
-    required Place place,
-    required List<String> selectedRules
   }) async{
     try{
       final cacheRepository = CacheRepositoryImpl.instance;
@@ -199,10 +197,10 @@ class ViolationRepositoryImpl extends IViolationRepository{
 
       request.fields.addAll({
         'plate_info': jsonEncode(violation.plateInfo.toJson()),
-        'registered_car_info': jsonEncode(violation.registeredCar!.toJson()),
+        'registered_car_info': violation.registeredCar == null ? 'null' : jsonEncode(violation.registeredCar!.toJson()),
         'status': 'saved',
-        'rules': jsonEncode(selectedRules),
-        'place': place.id,
+        'rules': jsonEncode(violation.rules.map((e) => e.id).toList()),
+        'place': violation.place.id,
         'paper_comment': violation.paperComment,
         'created_at':violation.createdAt,
         'out_comment': violation.outComment,

@@ -19,6 +19,16 @@ class RuleProvider extends ChangeNotifier{
   fetchRules() async{
     try{
       rules = await _ruleRepositoryImpl.getAllRules();
+      rules.sort(
+      (a, b){
+            var partsA = a.name.split('-');
+            var numberA = int.parse(partsA[0]);
+            var partsB = b.name.split('-');
+            var numberB = int.parse(partsB[0]);
+
+            return numberA - numberB;
+      }
+  );
       clearErrors();
     }catch(e){
       errorState = true;

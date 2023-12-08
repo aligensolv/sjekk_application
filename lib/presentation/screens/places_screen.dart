@@ -46,11 +46,11 @@ class _PlacesScreenState extends State<PlacesScreen> {
         backgroundColor: scaffoldColor,
         body: Consumer<PlaceProvider>(
           builder: (BuildContext context, PlaceProvider value, Widget? child) {
-            if(value.loadingState){
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+            // if(value.loadingState){
+            //   return Center(
+            //     child: CircularProgressIndicator(),
+            //   );
+            // }
       
             if(value.errorState){
               return Center(

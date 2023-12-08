@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:sjekk_application/core/constants/app_images.dart';
+import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
+import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
+import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 import 'package:sjekk_application/presentation/wrappers/connectivity_wrapper.dart';
 
 
@@ -36,20 +39,29 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
 
     return Scaffold(
-      body: AnimatedOpacity(
-        opacity: _isVisible ? 1.0 : 0,
-        duration: const Duration(milliseconds: 1200),
-        child: Center(
-          child: Container(
-            width: 300,
-            height: 300,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(AppImages.gensolv),
-                fit: BoxFit.cover,
-                  alignment: FractionalOffset(.25, 0.5)
+      body: SizedBox(
+        width: double.infinity,
+        child: AnimatedOpacity(
+          opacity: _isVisible ? 1.0 : 0,
+          duration: const Duration(milliseconds: 1200),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+              width: 280,
+              height: 280,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(AppImages.kontroll),
+                  fit: BoxFit.cover,
+                    alignment: FractionalOffset(.25, 0.5)
+                ),
               ),
             ),
+      
+            TemplateHeadlineText('VL Controll In A Pocket!',size: 30,)
+            ],
           ),
         ),
       ),

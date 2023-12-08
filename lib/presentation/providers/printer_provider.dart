@@ -6,7 +6,7 @@ class PrinterProvider extends ChangeNotifier{
   List<Printer> printers = [];
   bool errorState = false;
   String errorMessage = '';
-  bool loadingState = false;
+  // bool loadingState = false;
   final PrinterRepository _printerRepository = PrinterRepository();
 
   clear(){
@@ -33,8 +33,8 @@ class PrinterProvider extends ChangeNotifier{
   }
 
   fetchPrinters() async{
-    loadingState = true;
-    notifyListeners();
+    // loadingState = true;
+    // notifyListeners();
 
     try{
       printers = await _printerRepository.getAllPrinters();
@@ -43,7 +43,7 @@ class PrinterProvider extends ChangeNotifier{
       errorMessage = e.toString();
     }
 
-    loadingState = false;
+    // loadingState = false;
     notifyListeners();
   }
 }

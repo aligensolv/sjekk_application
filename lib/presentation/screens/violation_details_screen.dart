@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:image_picker/image_picker.dart';
@@ -35,7 +36,9 @@ import '../widgets/template/components/template_image.dart';
 import 'gallery_view.dart';
 import 'place_home.dart';
 
+import 'dart:math';
 class ViolationDetailsScreen extends StatefulWidget {
+  static const String route = 'violation_details_screen';
   final Violation violation;
 
   const ViolationDetailsScreen({Key? key, required this.violation}) : super(key: key);
@@ -48,34 +51,53 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
 
   final TextEditingController innerController = TextEditingController();
   final TextEditingController outterController = TextEditingController();
+
+    Future<bool> violationDetailsBack(bool stopDefaultButtonEvent, RouteInfo info) async{
+      context.read<ViolationDetailsProvider>().cancelPrintTimer();
+      if(info.currentRoute(context)!.settings.name != ViolationDetailsScreen.route){
+        return false;
+      }
+
+      return true;
+    }
+  
   @override
   void initState() {
     super.initState();
-            DateTime parsedCreatedAt = DateTime.parse(widget.violation.createdAt);
-    if(DateTime.now().difference(parsedCreatedAt).inMinutes < 6){
-                  initializeCounter();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      BackButtonInterceptor.add(violationDetailsBack);
+      DateTime parsedCreatedAt = DateTime.parse(widget.violation.createdAt);
+      final provider = Provider.of<ViolationDetailsProvider>(context,listen: false);
+        int maxTimePolicy = 0;
+        
+        if(provider.violation.rules.any((element) => element.timePolicy > 0)){
+          maxTimePolicy = provider.violation.rules.map((e){
+            print(e.timePolicy.toString());
+            return e.timePolicy;
+          }).reduce(max);
 
-    }
+                  print(maxTimePolicy);
+      if(DateTime.now().difference(parsedCreatedAt).inMinutes < maxTimePolicy){
+        Provider.of<ViolationDetailsProvider>(context, listen: false).updateTimePolicy();
+      }
+        }
+    });
+
+  final violationDetailsProvider = Provider.of<ViolationDetailsProvider>(context,listen: false);
+            innerController.text = violationDetailsProvider.violation.paperComment;
+        outterController.text = violationDetailsProvider.violation.outComment;
   }
 
-  Timer? _timer;
 
 
   @override
   void dispose() {
+    BackButtonInterceptor.remove(violationDetailsBack);
     innerController.dispose();
     outterController.dispose();
-    _timer?.cancel();
     super.dispose();
   }
 
-  void initializeCounter() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        
-      });
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -433,24 +455,29 @@ Widget PrintWidget(){
 
   return Consumer<ViolationDetailsProvider>(
     builder: (BuildContext context, ViolationDetailsProvider violationDetailsProvider, Widget? child) { 
-      DateTime parsedCreatedAt = DateTime.parse(violationDetailsProvider.violation.createdAt);
+      // DateTime parsedCreatedAt = DateTime.parse(violationDetailsProvider.violation.createdAt);
+        final provider = Provider.of<ViolationDetailsProvider>(context,listen: false);
+        // int maxTimePolicy = 0;
+        // if(provider.violation.rules.any((element) => element.timePolicy > 0)){
+        //   maxTimePolicy = provider.violation.rules.map((e) => e.timePolicy).reduce(max);
+        // }
         return Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if(DateTime.now().difference(parsedCreatedAt).inMinutes < 6)
+              if(provider.isTimerActive)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TemplateParagraphText('You Have wait 6 minutes before printing'),
+                  TemplateParagraphText('You Have wait ${provider.maxTimePolicy} minutes before printing'),
                   12.h,
                   TemplateHeadlineText(
-                    'Time passed: ${DateFormat('mm:ss').format(DateTime.fromMillisecondsSinceEpoch(DateTime.now().difference(parsedCreatedAt).inMilliseconds))}'
+                    'Time passed: ${provider.timePassed}'
                   ),
                 ],
               ),
-              if(DateTime.now().difference(parsedCreatedAt).inMinutes < 6)
+              if(provider.isTimerActive)
               24.h,
               Expanded(
                 child: ListView.separated(
@@ -483,9 +510,9 @@ Widget PrintWidget(){
               Align(
                 alignment: Alignment.centerRight,
                 child: Opacity(
-                  opacity: DateTime.now().difference(parsedCreatedAt).inMinutes < 6 ? 0.5 : 1,
+                  opacity: provider.isTimerActive ? 0.5 : 1,
                   child: AbsorbPointer(
-                    absorbing: DateTime.now().difference(parsedCreatedAt).inMinutes < 6,
+                    absorbing: provider.isTimerActive,
                     child: NormalTemplateButton(onPressed: ()async{
                       await showDialog(
                           context: context,
