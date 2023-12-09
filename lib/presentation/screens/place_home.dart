@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:scanbot_sdk/scanbot_sdk.dart';
 import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/data/models/place_model.dart';
 import 'package:sjekk_application/presentation/providers/place_provider.dart';
@@ -12,15 +11,12 @@ import 'package:sjekk_application/presentation/screens/cars_screen.dart';
 import 'package:sjekk_application/presentation/screens/choose_plate_input.dart';
 import 'package:sjekk_application/presentation/screens/place_violations.dart';
 import 'package:sjekk_application/presentation/screens/places_screen.dart';
-import 'package:sjekk_application/presentation/screens/plate_result_controller.dart';
 import 'package:sjekk_application/presentation/screens/qrcode_scanner.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_dialog.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
-
-import '../providers/create_violation_provider.dart';
 
 class PlaceHome extends StatefulWidget {
   static const String route = 'place_home';
@@ -56,7 +52,7 @@ class _PlaceHomeState extends State<PlaceHome> {
           onConfirmation: () async{
             Navigator.pop(context,true);
           }, 
-          title: 'Sign out', 
+          title: 'SIGN OUT', 
           message: 'Are you sure you want to sign out?'
         );
       }
@@ -100,7 +96,7 @@ class _PlaceHomeState extends State<PlaceHome> {
                             Navigator.pop(context,true);
                             // Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => route.isFirst);
                           }, 
-                          title: 'Signout', 
+                          title: 'SIGNOUT', 
                           message: 'Do you want to sign out from ${place.location}'
                         );
                       }
@@ -113,27 +109,27 @@ class _PlaceHomeState extends State<PlaceHome> {
                         );
                     }
                   },
-                  child: Icon(Icons.logout,size: 30,color: Colors.red,),
+                  child: const Icon(Icons.logout,size: 30,color: Colors.red,),
                 ),
               ),
-              SizedBox(height: 24.0,),
+              const SizedBox(height: 24.0,),
         
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(place.location,style: TextStyle(
                     fontSize: 24,
-                    color: ThemeHelper.textColor
+                    color: textColor
                   ),),
                   20.w,
-                  Icon(Icons.horizontal_rule),
+                  const Icon(Icons.horizontal_rule),
                   20.w,
                               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(format.format(placeProvider.startTime!),style: TextStyle(
                     fontSize: 24.0,
-                    color: ThemeHelper.textColor
+                    color: textColor
                   ),),
                   12.w,
                   GestureDetector(
@@ -146,7 +142,7 @@ class _PlaceHomeState extends State<PlaceHome> {
               ),
                 ],
               ),
-                          SizedBox(height: 24,),
+              const SizedBox(height: 24,),
     
               TemplateTileContainerCardWithIcon(
                 icon: Icons.add,
@@ -154,14 +150,14 @@ class _PlaceHomeState extends State<PlaceHome> {
                 onTap: () async{
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => ChoosePlateInputScreen()
+                      builder: (context) => const ChoosePlateInputScreen()
                     )
                   );
                   
                 },
                 title: 'CREATE VL'
               ),
-              SizedBox(height: 12,),
+              const SizedBox(height: 12,),
               TemplateTileContainerCardWithIcon(
                 title: 'REGISTERED CARS',
                 icon: FontAwesome.car,
@@ -171,7 +167,7 @@ class _PlaceHomeState extends State<PlaceHome> {
                 }
               ),
         
-              SizedBox(height: 12,),
+              const SizedBox(height: 12,),
               TemplateTileContainerCardWithIcon(
                 title: 'OBSERVED LIST',
                 widthFactor: 0.9,
@@ -191,7 +187,7 @@ class _PlaceHomeState extends State<PlaceHome> {
                 icon: Icons.qr_code_scanner_sharp,
                 widthFactor: 0.9,
                 onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: ((context) =>  QrCodeScanner())));
+                  Navigator.push(context, MaterialPageRoute(builder: ((context) =>  const QrCodeScanner())));
                 }
               ),
         

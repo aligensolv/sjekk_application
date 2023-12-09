@@ -5,7 +5,6 @@ import 'package:sjekk_application/data/models/registered_car_model.dart';
 import 'package:sjekk_application/data/models/violation_model.dart';
 import 'package:sjekk_application/data/repositories/remote/car_repository_impl.dart';
 import 'package:sjekk_application/data/repositories/remote/violation_repository.dart';
-import '../../data/models/rule_model.dart';
 import '../../data/repositories/remote/autosys_repository_impl.dart';
 
 
@@ -38,14 +37,6 @@ class CreateViolationProvider extends ChangeNotifier{
     notifyListeners();
   }
 
-  // List<CarImage> carImages = [];
-  // List<Rule> rules = [];
-  // String paper_comment = "";
-  // String out_comment = "";
-  
-
-
-  // int selectedPrintOptionIndex = 0;
 
   PlateInfo? plateInfo;
   RegisteredCar? registeredCar;
@@ -62,11 +53,6 @@ class CreateViolationProvider extends ChangeNotifier{
 
 
   clearAll(){
-    // carImages.clear();
-    // rules.clear();
-    // paper_comment = '';
-    // out_comment = '';
-    // selectedPrintOptionIndex = 0;
     isRegistered = false;
     plateInfo = null;
     registeredCar = null;
@@ -141,7 +127,7 @@ class CreateViolationProvider extends ChangeNotifier{
     try{
       final AutosysRepositoryImpl autosysRepository = AutosysRepositoryImpl();
 
-      PlateInfo _plateInfo = await autosysRepository.getCarInfo(plate);
+      PlateInfo? _plateInfo = await autosysRepository.getCarInfo(plate);
       setCarInfo(_plateInfo);
       return true;
     }catch(error){
@@ -151,35 +137,7 @@ class CreateViolationProvider extends ChangeNotifier{
     }
   }
 
-  // updateSelectedPrintOptionIndex(index){
-  //   selectedPrintOptionIndex = index;
-  //   notifyListeners();
-  // }
-
-  // addRule(Rule rule){
-  //   if(!rules.any((element) => element.id == rule.id)){
-  //     rules.add(rule);
-  //   }
-  // }
-
-  // removeRule(Rule rule){
-  //   rules = rules.where((element) => element.id != rule.id).toList();
-  // }
-
-  // addImage(CarImage image){
-  //   carImages.add(image);
-  //   notifyListeners();
-  // }
-
-  // setPaperComment(String input){
-  //   paper_comment = input;
-  // }
-
-  // setOutComment(String input){
-  //   out_comment = input;
-  // }
-
-  setCarInfo(PlateInfo info){
+  setCarInfo(PlateInfo? info){
     plateInfo = info;
     notifyListeners();
   }

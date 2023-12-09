@@ -33,7 +33,7 @@ class TemplateListTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0)
       ),
-      tileColor: backgroundColor != null ? backgroundColor : Colors.black12,
+      tileColor: backgroundColor != null ? backgroundColor : Colors.black26,
       contentPadding: contentPadding,
       leading: leading != null ? Icon(leading,size: 30,color: Colors.white,) : null,
       title: Text(

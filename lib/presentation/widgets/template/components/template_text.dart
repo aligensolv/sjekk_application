@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
 
 class TemplateHeaderText extends StatelessWidget {
@@ -8,7 +9,8 @@ class TemplateHeaderText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(text, style: TextStyle(
-      fontSize: 24
+      fontSize: 24,
+      color: textColor
     ),);
   }
 }

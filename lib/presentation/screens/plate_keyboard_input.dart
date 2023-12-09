@@ -1,5 +1,7 @@
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/presentation/providers/keyboard_input_provider.dart';
 import 'package:sjekk_application/presentation/screens/place_home.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
@@ -12,9 +14,33 @@ import 'package:sjekk_application/presentation/widgets/template/theme/colors_the
 import '../providers/create_violation_provider.dart';
 import 'plate_result_controller.dart';
 
-class PlateKeyboardInputScreen extends StatelessWidget {
+class PlateKeyboardInputScreen extends StatefulWidget {
   const PlateKeyboardInputScreen({super.key});
 
+  @override
+  State<PlateKeyboardInputScreen> createState() => _PlateKeyboardInputScreenState();
+}
+
+class _PlateKeyboardInputScreenState extends State<PlateKeyboardInputScreen> {
+    Future<bool> keyboardInputInterceptor(bool stopDefaultButtonEvent, RouteInfo info) async{
+      context.read<KeyboardInputProvider>().clearPlate();
+
+      return false;
+    }
+
+    @override
+  void initState() {
+    super.initState();
+    BackButtonInterceptor.add(keyboardInputInterceptor, zIndex: 3);
+  }
+
+  @override
+  void dispose() {
+    BackButtonInterceptor.remove(keyboardInputInterceptor);
+    super.dispose();
+  }
+
+  
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -38,18 +64,26 @@ class PlateKeyboardInputScreen extends StatelessWidget {
               Spacer(),
               NormalTemplateButton(
                 onPressed: () async{
-                  final KeyboardProvider = context.read<KeyboardInputProvider>();
+                  final keyboardProvider = context.read<KeyboardInputProvider>();
+                  final createViolationProvider = context.read<CreateViolationProvider>();
 
-                  await context.read<CreateViolationProvider>().getCarInfo(KeyboardProvider.plate); 
-                  await context.read<CreateViolationProvider>().getSystemCar(KeyboardProvider.plate);
+                  await createViolationProvider.getCarInfo(keyboardProvider.plate); 
+                  await createViolationProvider.getSystemCar(keyboardProvider.plate);
 
-
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                      builder: (context) => PlateResultController()
-                    ),
-                    (route) => route.settings.name == PlaceHome.route
-                  );
+                  if(createViolationProvider.plateInfo == null){
+                    SnackbarUtils.showSnackbar(
+                      context, 
+                      'Could not found this plate number'
+                    );
+                  }else{
+                    keyboardProvider.clearPlate();
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => PlateResultController()
+                      ),
+                      (route) => route.settings.name == PlaceHome.route
+                    );
+                  }
                 }, 
                 backgroundColor: Colors.green,
                 width: double.infinity,
@@ -126,7 +160,7 @@ class KeyboardLetterBox extends StatelessWidget {
         width: (size.width - 44) * 0.2,
         height: (size.width - 44) * 0.24,
         alignment: Alignment.center,
-        color: secondaryColor,
+        color: primaryColor,
         child: Text(letter,style: TextStyle(
           fontSize: 34,
           color: Colors.white,
@@ -184,7 +218,7 @@ class KeyboardDigitBox extends StatelessWidget {
         width: (size.width - 24 -  16) * 0.3333,
         height: (size.width - 44) * 0.3333,
         alignment: Alignment.center,
-        color: secondaryColor,
+        color: primaryColor,
         child: Text(letter,style: TextStyle(
           fontSize: 40,
           color: Colors.white,

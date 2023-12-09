@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:sjekk_application/core/constants/app_images.dart';
 import 'package:sjekk_application/presentation/providers/violation_details_provider.dart';
@@ -130,21 +131,21 @@ Widget CarInfoWidget() {
             backgroundColor: widget.violation.is_car_registered ? Colors.blue : Colors.red,
           ),
           12.h,
-                              _buildInfoContainer('Type', widget.violation.plateInfo.type),
-          _buildInfoContainer('Status', widget.violation.status),
-          _buildInfoContainer('Brand', widget.violation.plateInfo.brand),
-          _buildInfoContainer('Year', widget.violation.plateInfo.year),
-          _buildInfoContainer('Description', widget.violation.plateInfo.description),
-          _buildInfoContainer('Created At', widget.violation.createdAt),
+            _buildInfoContainer('Type', widget.violation.plateInfo.type, icon: Icons.category),
+            _buildInfoContainer('Status', widget.violation.status.toUpperCase(), icon: FontAwesome.exclamation),
+            _buildInfoContainer('Brand', widget.violation.plateInfo.brand,icon: FontAwesome.car),
+            _buildInfoContainer('Year', widget.violation.plateInfo.year, icon: Icons.calendar_month),
+            _buildInfoContainer('Description', widget.violation.plateInfo.description, icon: Icons.text_fields),
+            _buildInfoContainer('Created At', widget.violation.createdAt, icon: Icons.date_range),
     
           if(widget.violation.is_car_registered && widget.violation.registeredCar != null)
           Column(
             children: [
               TemplateHeadlineText('More Information'),
               12.h,
-              _buildInfoContainer('Regiseration type', widget.violation.registeredCar!.registerationType),
-              _buildInfoContainer('Fra', widget.violation.registeredCar!.startDate),
-              _buildInfoContainer('Regiseration type', widget.violation.registeredCar!.endDate)
+                _buildInfoContainer('Regiseration type', widget.violation.registeredCar!.registerationType, icon: Icons.app_registration),
+                _buildInfoContainer('Fra', widget.violation.registeredCar!.startDate,icon: Icons.start),
+                _buildInfoContainer('Til', widget.violation.registeredCar!.endDate, icon: Icons.start)
             ],
           )
         ],
@@ -153,7 +154,7 @@ Widget CarInfoWidget() {
   );
 }
 
-Widget _buildInfoContainer(String title, String value) {
+Widget _buildInfoContainer(String title, String value, {IconData? icon = Icons.info_outline}) {
   return Container(
     margin: const EdgeInsets.only(bottom: 12),
     decoration: const BoxDecoration(
@@ -164,7 +165,7 @@ Widget _buildInfoContainer(String title, String value) {
         Container(
           padding: const EdgeInsets.all(12.0),
           alignment: Alignment.center,
-          child: const Icon(Icons.info_outline,size: 30,color: Colors.white,),
+          child: Icon(icon,size: 30,color: Colors.white,),
           color: primaryColor,
           height:60,
           width: 60,
@@ -270,9 +271,6 @@ Widget RulesWidget(){
 }
 
 Widget PrintWidget(){
-
-  final media = MediaQuery.of(context).size;
-
   return Padding(
     padding: EdgeInsets.all(12.0),
     child: Column(

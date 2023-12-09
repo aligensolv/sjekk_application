@@ -243,8 +243,15 @@ class TemplateConfirmationDialog extends StatelessWidget {
   final String title;
   final String message;
   final VoidCallback onConfirmation;
+  VoidCallback? onCancel;
 
-  const TemplateConfirmationDialog({super.key, required this.onConfirmation,required this.title, required this.message});
+  TemplateConfirmationDialog({
+    super.key, 
+    required this.onConfirmation,
+    this.onCancel,
+    required this.title, 
+    required this.message
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -308,7 +315,7 @@ class TemplateConfirmationDialog extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 TemplateTextButton(
-                  onPressed: () {
+                  onPressed: onCancel ?? () {
                     Navigator.of(context).pop(false); // Close the dialog on button press
                   },
                   textColor: Colors.red,

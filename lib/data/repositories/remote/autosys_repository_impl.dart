@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 
 class AutosysRepositoryImpl implements IAutosysRepository{
   @override
-  Future<PlateInfo> getCarInfo(String plate) async{
+  Future<PlateInfo?> getCarInfo(String plate) async{
     try{
       final uri = Uri.parse('$baseUrl/autosys/$plate');
       final response = await http.get(uri);
@@ -17,8 +17,7 @@ class AutosysRepositoryImpl implements IAutosysRepository{
         PlateInfo plateInfo = PlateInfo.fromJson(decoded);
         return plateInfo;
       }else{
-        Map decoded = jsonDecode(response.body);
-        throw decoded['error'];
+        return null;
       }
     }catch(error){
       rethrow;

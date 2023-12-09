@@ -5,36 +5,32 @@ import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:scanbot_sdk/scanbot_sdk.dart';
-import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
-import 'package:sjekk_application/presentation/providers/violation_details_provider.dart';
-import 'package:sjekk_application/presentation/providers/violations_provider.dart';
 import 'package:sjekk_application/presentation/screens/bottom_navigator_screen.dart';
-import 'package:sjekk_application/presentation/screens/home_navigator_screen.dart';
-import 'package:sjekk_application/presentation/screens/home_screen.dart';
-import 'package:sjekk_application/presentation/screens/select_rule_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
+import 'package:sjekk_application/presentation/widgets/template/components/template_option.dart';
+import 'package:sjekk_application/presentation/widgets/template/components/template_options_menu.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text_field.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
-
-import '../../data/models/car_image_model.dart';
-import '../../data/models/print_option_model.dart';
 import '../../data/models/rule_model.dart';
-import '../../data/models/violation_model.dart';
 import '../providers/create_violation_provider.dart';
 import '../providers/local_violation_details_provider.dart';
-import '../widgets/custom_button.dart';
 import '../widgets/template/components/template_dialog.dart';
 import '../widgets/template/components/template_image.dart';
 import 'gallery_view.dart';
 import 'local_select_rule_screen.dart';
 import 'place_home.dart';
+
+enum OptionMenuFlags{
+  deleteViolation,
+  saveViolation,
+  savingError,
+  cancel
+}
 
 class LocalViolationDetailsScreen extends StatefulWidget {
   static const String route = "local_violation_details_screen";
@@ -50,12 +46,92 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
   TextEditingController innerController = TextEditingController();
   TextEditingController outterController = TextEditingController();
 
+  OverlayEntry? entry;
+
   Future<bool> localViolationDetailsBack(bool stopDefaultButtonEvent, RouteInfo info) async{
+    if(entry?.mounted ?? false){
+      entry?.remove();
+      return true;
+    }
     print(info.currentRoute(context));
     context.read<LocalViolationDetailsProvider>().cancelPrintTimer();
     if(info.currentRoute(context)!.settings.name != LocalViolationDetailsScreen.route){
       return false;
     }
+
+    entry = OverlayEntry(
+        builder: (context){
+          return TemplateOptionsMenu(
+          headerText: 'OPTIONS',
+          options: [
+            TemplateOption(
+              text: 'SAVE', 
+              icon: Icons.download, 
+              backgroundColor: secondaryColor,
+              textColor: Colors.white,
+              iconColor: Colors.white,
+              onTap: () async{
+                final createViolationProvider = Provider.of<CreateViolationProvider>(context, listen: false);
+                await createViolationProvider.setSavedViolation(
+                  s_violation: context.read<LocalViolationDetailsProvider>().localViolationCopy
+                );
+                await createViolationProvider.saveViolation(
+
+                );
+
+                if(createViolationProvider.errorState && createViolationProvider.errorType == CreateViolationProviderErrorType.saving_error){
+                  SnackbarUtils.showSnackbar(context, createViolationProvider.errorMessage,type: SnackBarType.failure);
+                }else{
+                  entry?.remove();
+                  SnackbarUtils.showSnackbar(context, 'VL was saved', type: SnackBarType.info);
+                  Navigator.of(context).popUntil(
+                    (route) => route.settings.name == PlaceHome.route
+                  );
+                }
+              }
+            ),
+            TemplateOption(
+              text: 'DELETE', 
+              icon: Icons.close, 
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              iconColor: Colors.white,
+              onTap: (){
+                entry?.remove();
+                Navigator.pop(context);
+              }
+            ),
+            TemplateOption(
+              text: 'BACK', 
+              icon: Icons.redo,
+              onTap: (){
+                entry?.remove();
+                // Navigator.pop(context);
+              }
+            ),
+          ],
+        );
+        }
+      );
+
+
+    Overlay.of(context).insert(
+      entry!
+    );
+
+    // if(flag != null && flag != OptionMenuFlags.cancel){
+    //   if(flag == OptionMenuFlags.saveViolation){
+    //     SnackbarUtils.showSnackbar(context, 'VL was saved', type: SnackBarType.info);
+    //     Navigator.of(context).popUntil(
+    //       (route) => route.settings.name == PlaceHome.route
+    //     );
+    //   }else if(flag == OptionMenuFlags.savingError){
+    //     final createViolationProvider = Provider.of<CreateViolationProvider>(context, listen: false);
+    //     SnackbarUtils.showSnackbar(context, createViolationProvider.errorMessage,type: SnackBarType.failure);
+    //   }else if(flag == OptionMenuFlags.deleteViolation){
+    //     Navigator.pop(context);
+    //   }
+    // }
 
     return true;
   }
@@ -100,42 +176,48 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
     return DefaultTabController(
       initialIndex: 0,
       length: 5,
-      child: Scaffold(
-        body: Column(
-          children: [
-            24.h,
-            TabBar(
-            tabs: <Widget>[
-              Tab(
-                icon: Icon(Icons.info_outline),
-              ),
-              Tab(
-                icon: Icon(Icons.image),
-              ),
-              Tab(
-                icon: Icon(Icons.rule),
-              ),
-              Tab(
-                icon: Icon(Icons.comment),
-              ),
-              Tab(
-                icon: Icon(Icons.print),
+      child: GestureDetector(
+        onTap: (){
+          entry?.remove();
+          entry = null;
+        },
+        child: Scaffold(
+          body: Column(
+            children: [
+              24.h,
+              const TabBar(
+              tabs: <Widget>[
+                Tab(
+                  icon: Icon(Icons.info_outline),
+                ),
+                Tab(
+                  icon: Icon(Icons.image),
+                ),
+                Tab(
+                  icon: Icon(Icons.rule),
+                ),
+                Tab(
+                  icon: Icon(Icons.comment),
+                ),
+                Tab(
+                  icon: Icon(Icons.print),
+                ),
+              ],
+            ),
+            12.h,
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    CarInfoWidget(),
+                    ImagesWidget(),
+                    RulesWidget(),
+                    CommentsWidget(),
+                    PrintWidget(),
+                  ],
+                ),
               ),
             ],
           ),
-          12.h,
-            Expanded(
-              child: TabBarView(
-                children: [
-                  CarInfoWidget(),
-                  ImagesWidget(),
-                  RulesWidget(),
-                  CommentsWidget(),
-                  PrintWidget(),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -145,7 +227,7 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
     return Consumer<LocalViolationDetailsProvider>(
       builder: (BuildContext context, LocalViolationDetailsProvider localViolationDetailsProvider, Widget? child) {  
         return Padding(
-          padding: EdgeInsets.all(12.0),
+          padding:  const EdgeInsets.all(12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -165,7 +247,7 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
                     await showDialog(
                       context: context, 
                       builder: (context){
-                        return TemplateSuccessDialog(
+                        return const TemplateSuccessDialog(
                           title: 'Saving Comment', 
                           message: 'Inner comment was saved'
                         );
@@ -192,7 +274,7 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
                     await showDialog(
                       context: context, 
                       builder: (context){
-                        return TemplateSuccessDialog(
+                        return const TemplateSuccessDialog(
                           title: 'Saving Comment', 
                           message: 'Outter comment was saved'
                         );
@@ -217,46 +299,46 @@ Widget CarInfoWidget() {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                              child: NormalTemplateButton(
-                                            onPressed: () async{
-                                              final createViolationProvider = Provider.of<CreateViolationProvider>(context, listen: false);
-                                              await createViolationProvider.setSavedViolation(
-                                                s_violation: context.read<LocalViolationDetailsProvider>().localViolationCopy
-                                              );
-                                              await createViolationProvider.saveViolation(
+          // Row(
+          //   children: [
+          //     Expanded(
+          //                     child: NormalTemplateButton(
+          //                                   onPressed: () async{
+          //                                     final createViolationProvider = Provider.of<CreateViolationProvider>(context, listen: false);
+          //                                     await createViolationProvider.setSavedViolation(
+          //                                       s_violation: context.read<LocalViolationDetailsProvider>().localViolationCopy
+          //                                     );
+          //                                     await createViolationProvider.saveViolation(
 
-                                              );
+          //                                     );
 
-                                              if(createViolationProvider.errorState && createViolationProvider.errorType == CreateViolationProviderErrorType.saving_error){
-                                                SnackbarUtils.showSnackbar(context, createViolationProvider.errorMessage,type: SnackBarType.failure);
-                                              }else{
-                                                SnackbarUtils.showSnackbar(context, 'VL was saved', type: SnackBarType.info);
-                                                Navigator.popUntil(
-                                                  context, 
-                                                  (route) => route.settings.name == PlaceHome.route
-                                                );
-                                              }
-                                            }, 
-                                            backgroundColor: Colors.green,
+          //                                     if(createViolationProvider.errorState && createViolationProvider.errorType == CreateViolationProviderErrorType.saving_error){
+          //                                       SnackbarUtils.showSnackbar(context, createViolationProvider.errorMessage,type: SnackBarType.failure);
+          //                                     }else{
+          //                                       SnackbarUtils.showSnackbar(context, 'VL was saved', type: SnackBarType.info);
+          //                                       Navigator.popUntil(
+          //                                         context, 
+          //                                         (route) => route.settings.name == PlaceHome.route
+          //                                       );
+          //                                     }
+          //                                   }, 
+          //                                   backgroundColor: secondaryColor,
   
-                                            text: 'SAVE'
-                                          ),
-                            ),
-                            12.w,
-              Expanded(
-                              child: InfoTemplateButton(
-                                            onPressed: () async{
-                                              Navigator.pop(context);
-                                            }, 
-                                            text: 'CANCEL'
-                                          ),
-                            ),
-            ],
-          ),
-          12.h,
+          //                                   text: 'SAVE'
+          //                                 ),
+          //                   ),
+          //                   12.w,
+          //     Expanded(
+          //                     child: InfoTemplateButton(
+          //                                   onPressed: () async{
+          //                                     Navigator.pop(context);
+          //                                   }, 
+          //                                   text: 'CANCEL'
+          //                                 ),
+          //                   ),
+          //   ],
+          // ),
+          // 12.h,
           TemplateContainerCard(
             title: context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.plate,
             height: 40,
@@ -290,8 +372,8 @@ Widget CarInfoWidget() {
 
 Widget _buildInfoContainer(String title, String value, {IconData? icon = Icons.info_outline}) {
   return Container(
-    margin: EdgeInsets.only(bottom: 12),
-    decoration: BoxDecoration(
+    margin: const EdgeInsets.only(bottom: 12),
+    decoration: const BoxDecoration(
       color: Colors.black12,
     ),
     child: Row(
@@ -311,12 +393,12 @@ Widget _buildInfoContainer(String title, String value, {IconData? icon = Icons.i
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 value,
                 style: TextStyle(fontSize: 16),
@@ -339,7 +421,7 @@ Widget ImagesWidget(){
         Expanded(
           child: GridView.builder(
             padding: EdgeInsets.zero,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         mainAxisSpacing: 8.0,
                         crossAxisSpacing: 8.0
@@ -368,7 +450,7 @@ Widget ImagesWidget(){
         NormalTemplateButton(
           text: 'ADD IMAGE',
           width: double.infinity,
-          backgroundColor: Colors.green,
+          backgroundColor: secondaryColor,
           onPressed: () async{
             ImagePicker imagePicker = ImagePicker();
             XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
@@ -420,7 +502,7 @@ Widget RulesWidget(){
           NormalTemplateButton(
             text: 'ADD RULE',
             width: double.infinity,
-            backgroundColor: Colors.green,
+            backgroundColor: secondaryColor,
             onPressed: (){
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => LocalSelectRuleScreen())
@@ -480,9 +562,14 @@ Widget PrintWidget(){
                                 height: 40,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                      color: localViolationDetailsProvider.selectedPrintOptionIndex == index ? Colors.green : Colors.black12
+                      color: localViolationDetailsProvider.selectedPrintOptionIndex == index ? Colors.blue : Colors.black26
                                 ),
-                                child: Text(localViolationDetailsProvider.printOptions[index].name),
+                                child: Text(
+                                  localViolationDetailsProvider.printOptions[index].name,
+                                  style: TextStyle(
+                                    color: localViolationDetailsProvider.selectedPrintOptionIndex == index ? Colors.white : Colors.black
+                                  ),
+                                ),
                               ),
                     );
                   },
@@ -498,18 +585,8 @@ Widget PrintWidget(){
                   absorbing: localViolationDetailsProvider.isTimerActive,
                   child: NormalTemplateButton(
                     width: double.infinity,
-                    backgroundColor: Colors.green,
+                    backgroundColor: secondaryColor,
                     onPressed: ()async{
-                    await showDialog(
-                        context: context,
-                        builder: (context){
-                          return TemplateSuccessDialog(
-                            title: 'Printing VL',
-                            message: 'Printing VL And Taking A Picture',
-                            
-                          );
-                        }
-                      );
 
                       ImagePicker imagePicker = ImagePicker();
                       XFile? file = await imagePicker.pickImage(source: ImageSource.camera);

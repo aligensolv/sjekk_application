@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/data/models/place_model.dart';
 import 'package:sjekk_application/data/models/registered_car_model.dart';
 import 'package:sjekk_application/presentation/providers/car_provider.dart';

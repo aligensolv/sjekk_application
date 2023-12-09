@@ -6,6 +6,7 @@ import 'package:sjekk_application/presentation/providers/violation_details_provi
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_list_tile.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
+import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
 class SelectRuleScreen extends StatefulWidget {
   const SelectRuleScreen({super.key});
@@ -26,34 +27,37 @@ class _SelectRuleScreenState extends State<SelectRuleScreen> {
   }
   @override
   Widget build(BuildContext context) {
-    return Consumer<RuleProvider>(
-      builder: (BuildContext context, RuleProvider ruleProvider, Widget? child) { 
-        if(ruleProvider.rules.isEmpty){
-          return Center(
-            child: TemplateHeadlineText('No rules available'),
-          );
-        }
-        return Padding(
-      padding: EdgeInsets.all(12.0),
-      child: ListView.separated(
-        separatorBuilder: (context,index){
-          return SizedBox(height: 12,);
+    return Scaffold(
+      backgroundColor: scaffoldColor,
+      body: Consumer<RuleProvider>(
+        builder: (BuildContext context, RuleProvider ruleProvider, Widget? child) { 
+          if(ruleProvider.rules.isEmpty){
+            return Center(
+              child: TemplateHeadlineText('No rules available'),
+            );
+          }
+          return Padding(
+        padding: EdgeInsets.all(12.0),
+        child: ListView.separated(
+          separatorBuilder: (context,index){
+            return SizedBox(height: 12,);
+          },
+          itemBuilder: (context, index) {
+            Rule rule = ruleProvider.rules[index];
+            return TemplateContainerCard(
+              title: '${rule.name} (${rule.charge}\$)',
+              backgroundColor: secondaryColor,
+              onTap: () async{
+                await Provider.of<ViolationDetailsProvider>(context, listen: false).addRule(rule.id);
+                Navigator.pop(context);
+              },
+            );
+          },
+          itemCount: ruleProvider.rules.length,  
+        ),
+      );
         },
-        itemBuilder: (context, index) {
-          Rule rule = ruleProvider.rules[index];
-          return TemplateTileContainerCardWithIcon(
-            title: '${rule.name} (${rule.charge} \$)',
-            icon: Icons.euro,
-            onTap: () async{
-              await Provider.of<ViolationDetailsProvider>(context, listen: false).addRule(rule.id);
-              Navigator.pop(context);
-            },
-          );
-        },
-        itemCount: ruleProvider.rules.length,  
       ),
-    );
-      },
     );
   }
 }

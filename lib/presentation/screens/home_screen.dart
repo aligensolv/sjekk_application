@@ -7,13 +7,10 @@ import 'package:sjekk_application/presentation/screens/completed_violations_scre
 import 'package:sjekk_application/presentation/screens/done_shift.dart';
 import 'package:sjekk_application/presentation/screens/places_screen.dart';
 import 'package:sjekk_application/presentation/screens/saved_violations_screen.dart';
-import 'package:sjekk_application/presentation/screens/temp_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
-import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
+import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/template_workspace.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
-
-import '../widgets/category_card.dart';
 
 class HomeScreen extends StatelessWidget {
   static const String route = 'home_route';
@@ -31,11 +28,8 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Welcome ${user.username}',
-                  style: Theme.of(context).textTheme.headline6?.copyWith(
-                        color: ThemeHelper.secondaryColor,
-                      ),
+                TemplateHeaderText(
+                  'Welcome ${user.username}'
                 ),
                 const SizedBox(height: 20),
                 InkWell(
@@ -62,7 +56,7 @@ class HomeScreen extends StatelessWidget {
                           Navigator.pushNamed(context,PlacesScreen.route);
                         }),
                     TemplateContainerCardWithIcon(
-                        title: 'SAVED VL', backgroundColor:ThemeHelper.secondaryColor, icon: Icons.save, onTap: () {
+                        title: 'SAVED VL', backgroundColor:secondaryColor, icon: Icons.downloading, onTap: () {
                           Navigator.pushNamed(context, SavedViolationScreen.route);
                         }),
                     TemplateContainerCardWithIcon(

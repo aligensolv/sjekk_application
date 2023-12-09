@@ -10,7 +10,7 @@ class ScanResultScreen extends StatelessWidget {
     return Scaffold(
       body: Center(
         child: Text(result,style: TextStyle(
-          color: ThemeHelper.textColor,
+          // color: ThemeHelper.textColor,
           fontSize: 24
         ),),
       ),

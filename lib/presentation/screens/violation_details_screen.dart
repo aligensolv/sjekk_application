@@ -4,18 +4,10 @@ import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:scanbot_sdk/scanbot_sdk.dart';
-import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
-import 'package:sjekk_application/presentation/providers/place_provider.dart';
-import 'package:sjekk_application/presentation/providers/rule_provider.dart';
 import 'package:sjekk_application/presentation/providers/violation_details_provider.dart';
-import 'package:sjekk_application/presentation/providers/violations_provider.dart';
 import 'package:sjekk_application/presentation/screens/bottom_navigator_screen.dart';
-import 'package:sjekk_application/presentation/screens/home_navigator_screen.dart';
-import 'package:sjekk_application/presentation/screens/home_screen.dart';
 import 'package:sjekk_application/presentation/screens/select_rule_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
@@ -24,13 +16,9 @@ import 'package:sjekk_application/presentation/widgets/template/components/templ
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
-import '../../data/models/car_image_model.dart';
-import '../../data/models/place_model.dart';
-import '../../data/models/print_option_model.dart';
 import '../../data/models/rule_model.dart';
 import '../../data/models/violation_model.dart';
 import '../providers/create_violation_provider.dart';
-import '../widgets/custom_button.dart';
 import '../widgets/template/components/template_dialog.dart';
 import '../widgets/template/components/template_image.dart';
 import 'gallery_view.dart';
@@ -47,7 +35,7 @@ class ViolationDetailsScreen extends StatefulWidget {
   State<ViolationDetailsScreen> createState() => _ViolationDetailsScreenState();
 }
 
-class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
+class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> with SingleTickerProviderStateMixin{
 
   final TextEditingController innerController = TextEditingController();
   final TextEditingController outterController = TextEditingController();
@@ -101,52 +89,45 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-        DateTime parsedCreatedAt = DateTime.parse(widget.violation.createdAt);
     return DefaultTabController(
       initialIndex: 0,
       length: 5,
-      child: WillPopScope(
-        onWillPop: () async{
-          print('will pop');
-          return false;
-        },
-        child: Scaffold(
-          body: Column(
-            children: [
-              24.h,
-              TabBar(
-              tabs: <Widget>[
-                Tab(
-                  icon: Icon(Icons.info_outline),
-                ),
-                Tab(
-                  icon: Icon(Icons.image),
-                ),
-                Tab(
-                  icon: Icon(Icons.rule),
-                ),
-                Tab(
-                  icon: Icon(Icons.comment),
-                ),
-                Tab(
-                  icon: Icon(Icons.print),
-                ),
-              ],
-            ),
-            12.h,
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    CarInfoWidget(),
-                    ImagesWidget(),
-                    RulesWidget(),
-                    CommentsWidget(),
-                    PrintWidget(),
-                  ],
-                ),
+      child: Scaffold(
+        body: Column(
+          children: [
+            24.h,
+            TabBar(
+            tabs: <Widget>[
+              Tab(
+                icon: Icon(Icons.info_outline),
+              ),
+              Tab(
+                icon: Icon(Icons.image),
+              ),
+              Tab(
+                icon: Icon(Icons.rule),
+              ),
+              Tab(
+                icon: Icon(Icons.comment),
+              ),
+              Tab(
+                icon: Icon(Icons.print),
               ),
             ],
           ),
+          12.h,
+            Expanded(
+              child: TabBarView(
+                children: [
+                  CarInfoWidget(),
+                  ImagesWidget(),
+                  RulesWidget(),
+                  CommentsWidget(),
+                  PrintWidget(),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -218,88 +199,101 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
 
 
 Widget CarInfoWidget() {
-  return Padding(
-    padding: const EdgeInsets.all(12.0),
-    child: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: TemplateContainerCard(
-                  title: widget.violation.plateInfo.plate,
-                  height: 40,
-  
-                  backgroundColor: widget.violation.is_car_registered ? Colors.blue : Colors.red,
-                ),
-              ),
-              12.w,
-                            Expanded(
-                              child: DangerTemplateButton(
-                                            onPressed: () async{
-                                              await showDialog(
-                                                context: context, 
-                                                builder: (context){
-                                                  return TemplateConfirmationDialog(
-                                                    onConfirmation: () async{
-                                                      await Provider.of<CreateViolationProvider>(context, listen: false).deleteViolation(widget.violation);
-                                                      Navigator.pop(context);
-                                                      if(Provider.of<CreateViolationProvider>(context, listen: false).errorState){
-                              Navigator.pop(context);
-                            
-                              await showDialog(
-                                context: context, 
-                                builder: (context){
-                                  return TemplateFailureDialog(
-                                    title: 'Delete Failed', 
-                                    message: Provider.of<CreateViolationProvider>(context, listen: false).errorMessage
-                                  );
-                                }
-                              );
-                            
-                                                      }else{
-                              await showDialog(
-                                context: context, 
-                                builder: (context){
-                                  return TemplateSuccessDialog(
-                                    title: 'Delete Done', 
-                                    message: 'VL was successfully deleted',
-                                  );
-                                }
-                              );
-                                                      }
-                                                    }, 
-                                                    title: 'Deleting VL', 
-                                                    message: 'Are you sure you want to delete this VL?'
-                                                  );
-                                                }
-                                              );
-                                            }, 
-                                            text: 'DELETE'
-                                          ),
-                            ),
-            ],
-          ),
-          12.h,
-          _buildInfoContainer('Type', widget.violation.plateInfo.type, icon: Icons.category),
-          _buildInfoContainer('Status', widget.violation.status.toUpperCase(), icon: FontAwesome.exclamation),
-          _buildInfoContainer('Brand', widget.violation.plateInfo.brand,icon: FontAwesome.car),
-          _buildInfoContainer('Year', widget.violation.plateInfo.year, icon: Icons.calendar_month),
-          _buildInfoContainer('Description', widget.violation.plateInfo.description, icon: Icons.text_fields),
-          _buildInfoContainer('Created At', widget.violation.createdAt, icon: Icons.date_range),
+  OverlayEntry? entry;
+    AnimationController controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+  Animation<double> animation = CurvedAnimation(parent: controller, curve: Curves.easeIn);
+
+
+  return GestureDetector(
+    onTap: (){
+      if(entry != null){
+        entry?.remove();
+        entry = null;
+      }
+    },
+    child: Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TemplateContainerCard(
+                    title: widget.violation.plateInfo.plate,
+                    height: 40,
     
-          if(widget.violation.is_car_registered && widget.violation.registeredCar != null)
-          Column(
-            children: [
-              TemplateHeadlineText('More Information'),
-              12.h,
-              _buildInfoContainer('Regiseration type', widget.violation.registeredCar!.registerationType, icon: Icons.app_registration),
-              _buildInfoContainer('Fra', widget.violation.registeredCar!.startDate,icon: Icons.start),
-              _buildInfoContainer('Til', widget.violation.registeredCar!.endDate, icon: Icons.start)
-            ],
-          )
-        ],
+                    backgroundColor: widget.violation.is_car_registered ? Colors.blue : Colors.black54,
+                  ),
+                ),
+                12.w,
+                Expanded(
+                  child: DangerTemplateButton(
+                    onPressed: () async{
+                      controller.forward();
+                      entry = OverlayEntry(
+                        builder: (context){
+                          return ScaleTransition(
+                            scale: animation,
+                            child: TemplateConfirmationDialog(
+                              onConfirmation: () async{
+                                await Provider.of<CreateViolationProvider>(context, listen: false).deleteViolation(widget.violation);
+                                Navigator.pop(context);
+                                if(Provider.of<CreateViolationProvider>(context, listen: false).errorState){
+                                Navigator.pop(context);
+                              
+                              SnackbarUtils.showSnackbar(
+                                context, 
+                                Provider.of<CreateViolationProvider>(context, listen: false).errorMessage
+                              );  
+                                                        }else{
+                            
+                                Navigator.of(context).popUntil(
+                                  (route) => route.settings.name == PlaceHome.route || route.settings.name == BottomScreenNavigator.route
+                                );
+                                                        }
+                              }, 
+                              onCancel: (){
+                                controller.reverse();
+                                entry?.remove();
+                              },
+                                title: 'Deleting VL', 
+                                message: 'Are you sure you want to delete this VL?'
+                              ),
+                          );
+  }
+                      );
+  
+                      Overlay.of(context).insert(
+                        entry!
+                      );
+                    }, 
+                    text: 'DELETE'
+                  ),
+                ),
+              ],
+            ),
+            12.h,
+            _buildInfoContainer('Type', widget.violation.plateInfo.type, icon: Icons.category),
+            _buildInfoContainer('Status', widget.violation.status.toUpperCase(), icon: FontAwesome.exclamation),
+            _buildInfoContainer('Brand', widget.violation.plateInfo.brand,icon: FontAwesome.car),
+            _buildInfoContainer('Year', widget.violation.plateInfo.year, icon: Icons.calendar_month),
+            _buildInfoContainer('Description', widget.violation.plateInfo.description, icon: Icons.text_fields),
+            _buildInfoContainer('Created At', widget.violation.createdAt, icon: Icons.date_range),
+      
+            if(widget.violation.is_car_registered && widget.violation.registeredCar != null)
+            Column(
+              children: [
+                TemplateHeadlineText('More Information'),
+                12.h,
+                _buildInfoContainer('Regiseration type', widget.violation.registeredCar!.registerationType, icon: Icons.app_registration),
+                _buildInfoContainer('Fra', widget.violation.registeredCar!.startDate,icon: Icons.start),
+                _buildInfoContainer('Til', widget.violation.registeredCar!.endDate, icon: Icons.start)
+              ],
+            )
+          ],
+        ),
       ),
     ),
   );
@@ -382,18 +376,17 @@ Widget ImagesWidget(){
         ),
         12.h,
 
-        Align(
-          alignment: Alignment.centerRight,
-          child: NormalTemplateButton(
-            text: 'ADD',
-            onPressed: () async{
-              ImagePicker imagePicker = ImagePicker();
-              XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
-              if(file != null){
-                await violationDetailsProvider.addImage(file.path);
-              }
-            },
-          ),
+        NormalTemplateButton(
+          text: 'ADD IMAGE',
+          width: double.infinity,
+          backgroundColor: secondaryColor,
+          onPressed: () async{
+            ImagePicker imagePicker = ImagePicker();
+            XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
+            if(file != null){
+              await violationDetailsProvider.addImage(file.path);
+            }
+          },
         )
       ],
     ),
@@ -431,16 +424,15 @@ Widget RulesWidget(){
           ),
 
           12.h,
-          Align(
-            alignment: Alignment.centerRight,
-            child: NormalTemplateButton(
-              text: 'ADD RULE',
-              onPressed: (){
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => SelectRuleScreen())
-                );
-              },
-            ),
+          NormalTemplateButton(
+            text: 'ADD RULE',
+            backgroundColor: secondaryColor,
+            width: double.infinity,
+            onPressed: (){
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => SelectRuleScreen())
+              );
+            },
           )
         ],
       ),
@@ -495,9 +487,14 @@ Widget PrintWidget(){
                                 height: 40,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                      color: violationDetailsProvider.selectedPrintOptionIndex == index ? Colors.green : Colors.black12
+                      color: violationDetailsProvider.selectedPrintOptionIndex == index ? Colors.blue : Colors.black12
                                 ),
-                                child: Text(violationDetailsProvider.printOptions[index].name),
+                                child: Text(
+                                  violationDetailsProvider.printOptions[index].name.toUpperCase(),
+                                  style: TextStyle(
+                                    color: violationDetailsProvider.selectedPrintOptionIndex == index ? Colors.white : Colors.black
+                                  ),
+                                ),
                               ),
                     );
                   },
@@ -507,34 +504,24 @@ Widget PrintWidget(){
                 ),
               ),
 
-              Align(
-                alignment: Alignment.centerRight,
-                child: Opacity(
-                  opacity: provider.isTimerActive ? 0.5 : 1,
-                  child: AbsorbPointer(
-                    absorbing: provider.isTimerActive,
-                    child: NormalTemplateButton(onPressed: ()async{
-                      await showDialog(
-                          context: context,
-                          builder: (context){
-                            return TemplateSuccessDialog(
-                              title: 'Printing VL',
-                              message: 'Printing VL And Taking A Picture',
-                              
-                            );
-                          }
-                        );
+              Opacity(
+                opacity: provider.isTimerActive ? 0.5 : 1,
+                child: AbsorbPointer(
+                  absorbing: provider.isTimerActive,
+                  child: NormalTemplateButton(
+                    width: double.infinity,
+                    backgroundColor: secondaryColor,
+                    onPressed: ()async{
 
-                        ImagePicker imagePicker = ImagePicker();
-                        XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
-                        if(file != null){
-                          await violationDetailsProvider.addImage(file.path);
-                          await Provider.of<ViolationDetailsProvider>(context, listen: false).completeViolation();
-                          SnackbarUtils.showSnackbar(context, 'VL is completed');
-                          Navigator.popUntil(context, (route) => route.settings.name == BottomScreenNavigator.route || route.settings.name == PlaceHome.route);
-                        }
-                    }, text: 'PRINT',),
-                  ),
+                      ImagePicker imagePicker = ImagePicker();
+                      XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
+                      if(file != null){
+                        await violationDetailsProvider.addImage(file.path);
+                        await Provider.of<ViolationDetailsProvider>(context, listen: false).completeViolation();
+                        SnackbarUtils.showSnackbar(context, 'VL is completed');
+                        Navigator.popUntil(context, (route) => route.settings.name == BottomScreenNavigator.route || route.settings.name == PlaceHome.route);
+                      }
+                  }, text: 'PRINT',),
                 ),
               ),
             ],

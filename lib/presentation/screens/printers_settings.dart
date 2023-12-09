@@ -94,7 +94,7 @@ class _PrintersSettingsState extends State<PrintersSettings> {
         Expanded(
           child: Center(
             child: Text('No Printers Available',style: TextStyle(
-              color: ThemeHelper.textColor,
+              // color: ThemeHelper.textColor,
               fontSize: 24
             ),),
           ),

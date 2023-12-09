@@ -8,12 +8,9 @@ import 'package:sjekk_application/presentation/providers/auth_provider.dart';
 import 'package:sjekk_application/presentation/providers/login_provider.dart';
 import 'package:sjekk_application/presentation/providers/shift_provider.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
-import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text_field.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 import '../../data/entities/auth_credentials.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/custom_text_field.dart';
 import 'home_navigator_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -39,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: ThemeHelper.backgroundColor,
+        backgroundColor: scaffoldColor,
         body: Consumer<LoginProvider>(
           builder: (BuildContext context, LoginProvider loginProvider, Widget? child) {
             // if(loginProvider.loadingState){
@@ -78,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Text(
                                 "Login to your Account",
                                 style: TextStyle(
-                                  color: ThemeHelper.textColor,
+                                  color: textColor,
                                   fontSize: 24,
                                 ),
                               ),

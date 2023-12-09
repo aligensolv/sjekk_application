@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/data/models/printer_model.dart';
-import 'package:sjekk_application/data/repositories/local/printer_repositories.dart';
 import 'package:sjekk_application/presentation/providers/printer_provider.dart';
-import 'package:sjekk_application/presentation/screens/printers_settings.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_dialog.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text_field.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
-import '../../core/helpers/theme_helper.dart';
 
 class AddPrinterTest extends StatefulWidget {
   const AddPrinterTest({Key? key}) : super(key: key);

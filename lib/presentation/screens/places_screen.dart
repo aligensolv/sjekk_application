@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/presentation/providers/place_provider.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
@@ -85,6 +84,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                 
                       return TemplateContainerCard(
                         title: '${place.code} \n${place.location}',
+                        backgroundColor: primaryColor,
                         alignment: Alignment.centerLeft,
                         onTap: (){
                           value.setSelectedPlace(place);

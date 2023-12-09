@@ -43,9 +43,9 @@ class PlaceRegisteredVL extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TemplateParagraphText(vl.plateInfo.brand),
-                    TemplateParagraphText(vl.plateInfo.type),
-                    TemplateParagraphText(vl.plateInfo.plate),
+                    TemplateParagraphText(vl.plateInfo.brand,color: Colors.white,),
+                    TemplateParagraphText(vl.plateInfo.type, color: Colors.white),
+                    TemplateParagraphText(vl.plateInfo.plate, color: Colors.white),
                     Spacer(),
                     Align(
                       alignment: Alignment.centerRight,

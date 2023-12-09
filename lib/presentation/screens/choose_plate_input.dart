@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:scanbot_sdk/scanbot_sdk.dart';
+import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/presentation/screens/plate_keyboard_input.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
@@ -35,7 +35,7 @@ class ChoosePlateInputScreen extends StatelessWidget {
                 child: TemplateContainerCardWithIcon(
                   // widthFactor: 0.8,
                   height: 160,
-                  title: 'SCAN',backgroundColor: Colors.green, icon: Icons.camera, onTap: () async{
+                  title: 'SCAN',backgroundColor: primaryColor, icon: Icons.camera, onTap: () async{
                     var config = LicensePlateScannerConfiguration(
                     topBarBackgroundColor: primaryColor,  
                     scanStrategy: LicensePlateScanStrategy.ML_BASED,
@@ -46,15 +46,24 @@ class ChoosePlateInputScreen extends StatelessWidget {
                     if(result.operationResult == OperationResult.CANCELED || result.operationResult == OperationResult.ERROR){
                       return;
                     }
+
+                    final createViolationProvider = context.read<CreateViolationProvider>();
       
-                    await Provider.of<CreateViolationProvider>(context, listen: false).getCarInfo(result.licensePlate); 
-                    await Provider.of<CreateViolationProvider>(context, listen: false).getSystemCar(result.licensePlate);
+                    await createViolationProvider.getCarInfo(result.licensePlate); 
+                    await createViolationProvider.getSystemCar(result.licensePlate);
                     
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => PlateResultController()
-                      )
-                    );
+                    if(createViolationProvider.plateInfo != null){
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const PlateResultController()
+                        )
+                      );
+                    }else{
+                      SnackbarUtils.showSnackbar(
+                        context, 
+                        'Could not found this plate number'
+                      );
+                    }
                 }),
               ),
               12.w,
@@ -65,7 +74,7 @@ class ChoosePlateInputScreen extends StatelessWidget {
                   title: 'KEYBOARD',backgroundColor: secondaryColor, icon: Icons.keyboard, onTap: () {
                     // Navigator.pushNamed(context, CompletedViolationsScreen.route);
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => PlateKeyboardInputScreen())
+                      MaterialPageRoute(builder: (context) => const PlateKeyboardInputScreen())
                     );
                 }),
               )

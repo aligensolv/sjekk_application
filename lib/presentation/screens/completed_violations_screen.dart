@@ -3,12 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/data/models/violation_model.dart';
 import 'package:sjekk_application/presentation/providers/violations_provider.dart';
-import 'package:sjekk_application/presentation/screens/violation_details_screen.dart';
+import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 import 'package:sjekk_application/presentation/widgets/template/widgets/completed_violation.dart';
-
-import '../../core/helpers/theme_helper.dart';
-import '../providers/violation_details_provider.dart';
-import 'completed_violations_details_screen.dart';
 
 
 class CompletedViolationsScreen extends StatefulWidget {
@@ -43,6 +39,7 @@ class _CompletedViolationsScreenState extends State<CompletedViolationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: scaffoldColor,
       body: Consumer<ViolationProvider>(
         builder: (BuildContext context, ViolationProvider value, Widget? child) {
           if(value.loadingState){
@@ -59,8 +56,8 @@ class _CompletedViolationsScreenState extends State<CompletedViolationsScreen> {
 
           if(value.completedViolations.isEmpty){
             return Center(
-              child: Text('no completed violations yet',style: TextStyle(
-                color: ThemeHelper.textColor,
+              child: Text('no completed violations',style: TextStyle(
+                color: textColor,
                 fontSize: 24
               ),),
             );
