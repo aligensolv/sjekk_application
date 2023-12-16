@@ -1,11 +1,21 @@
-class PlateInfo{
-  final String type;
-  final String plate;
-  final String year;
-  final String description;
-  final String brand;
+import 'package:flutter/material.dart';
 
-  PlateInfo({required this.type, required this.plate, required this.year, required this.description, required this.brand});
+class PlateInfo{
+  String? type;
+  String plate;
+  String? year;
+  String? description;
+  String? brand;
+  String? color;
+
+  PlateInfo({
+    required this.type, 
+    required this.plate, 
+    required this.year, 
+    required this.description,
+    required this.brand, 
+    required this.color
+  });
 
   factory PlateInfo.fromJson(Map json){
     print(json);
@@ -14,7 +24,19 @@ class PlateInfo{
       plate: json["plate"],
       year: json["year"],
       description: json["description"],
-      brand: json["brand"]
+      brand: json["brand"],
+      color: json["color"]
+    );
+  }
+
+  factory PlateInfo.unknown(String plate){
+    return PlateInfo(
+      type: null, 
+      plate: plate, 
+      year: null, 
+      description: null, 
+      brand: null, 
+      color: null
     );
   }
 
@@ -24,7 +46,8 @@ class PlateInfo{
       'plate': plate,
       'year': year,
       'description': description,
-      'brand': brand
+      'brand': brand,
+      'color': color
     };
   }
 }

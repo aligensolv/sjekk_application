@@ -88,6 +88,28 @@ class DangerTemplateButton extends StatelessWidget {
   }
 }
 
+class DangerTemplateIconButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const DangerTemplateIconButton({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed, 
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.black26,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero
+        ),
+            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+  elevation: 0,
+      ),
+      icon: Icon(Icons.close,color: Colors.red,size: 32,),
+    );
+  }
+}
+
 class TemplateOutlinedButton extends StatelessWidget {
   final VoidCallback onPressed;
   final String text;

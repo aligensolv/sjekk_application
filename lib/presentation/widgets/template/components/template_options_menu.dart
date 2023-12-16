@@ -8,11 +8,13 @@ import 'template_option.dart';
 class TemplateOptionsMenu extends StatelessWidget {
   final List<TemplateOption> options;
   final String headerText;
+  Color? headerColor;
 
-  const TemplateOptionsMenu({
+  TemplateOptionsMenu({
     super.key, 
     required this.options,
-    required this.headerText
+    required this.headerText,
+    this.headerColor = Colors.white
   });
 
   @override
@@ -32,7 +34,8 @@ class TemplateOptionsMenu extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             TemplateContainerCard(
-              title: headerText
+              title: headerText,
+              backgroundColor: headerColor,
             ),
             ...options
           ],

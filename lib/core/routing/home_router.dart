@@ -1,20 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:sjekk_application/core/utils/router_utils.dart';
 import 'package:sjekk_application/presentation/screens/about_screen.dart';
+import 'package:sjekk_application/presentation/screens/add_printer_test.dart';
 import 'package:sjekk_application/presentation/screens/cars_screen.dart';
 import 'package:sjekk_application/presentation/screens/bottom_navigator_screen.dart';
-import 'package:sjekk_application/presentation/screens/create_violation_screen.dart';
+import 'package:sjekk_application/presentation/screens/choose_plate_input.dart';
+import 'package:sjekk_application/presentation/screens/completed_violation_brief_information.dart';
+import 'package:sjekk_application/presentation/screens/completed_violation_images.dart';
 import 'package:sjekk_application/presentation/screens/done_shift.dart';
 import 'package:sjekk_application/presentation/screens/home_navigator_screen.dart';
 import 'package:sjekk_application/presentation/screens/home_screen.dart';
+import 'package:sjekk_application/presentation/screens/local_violation_details.dart';
 import 'package:sjekk_application/presentation/screens/place_details.dart';
 import 'package:sjekk_application/presentation/screens/place_home.dart';
 import 'package:sjekk_application/presentation/screens/place_violations.dart';
 import 'package:sjekk_application/presentation/screens/places_screen.dart';
+import 'package:sjekk_application/presentation/screens/plate_result_controller.dart';
+import 'package:sjekk_application/presentation/screens/plate_result_info.dart';
 import 'package:sjekk_application/presentation/screens/printers_settings.dart';
+import 'package:sjekk_application/presentation/screens/qrcode_scanner.dart';
 import 'package:sjekk_application/presentation/screens/saved_violations_screen.dart';
+import 'package:sjekk_application/presentation/screens/select_brand_screen.dart';
+import 'package:sjekk_application/presentation/screens/select_car_type_screen.dart';
+import 'package:sjekk_application/presentation/screens/select_color_screen.dart';
+import 'package:sjekk_application/presentation/screens/unknown_plate_result_info.dart';
+import 'package:sjekk_application/presentation/widgets/template/template_workspace.dart';
 
 import '../../presentation/screens/completed_violations_screen.dart';
 
+import '../../presentation/screens/plate_keyboard_input.dart';
 import '../../presentation/screens/terms_and_conditions.dart';
 import '../../presentation/screens/unknown_route_screen.dart';
 
@@ -22,72 +36,88 @@ class HomeRouter {
   static Route<dynamic> generatedRoute(RouteSettings settings) {
     switch (settings.name) {
       case BottomScreenNavigator.route:
-        return MaterialPageRoute(
-          builder: (context) => BottomScreenNavigator(),
-          settings: RouteSettings(name: BottomScreenNavigator.route)
-        );
+        return buildCustomBuilder(BottomScreenNavigator(), settings);
 
       case PrintersSettings.route:
-        return MaterialPageRoute(
-          builder: (context) => PrintersSettings(),
-          settings: RouteSettings(name: PrintersSettings.route)
-        );
+        return buildCustomBuilder(PrintersSettings(), settings);
 
       case HomeNavigatorScreen.route:
-        return MaterialPageRoute(
-          builder: (context) => const HomeNavigatorScreen(),
-          settings: RouteSettings(name: HomeNavigatorScreen.route)
-        );
+        return buildCustomBuilder(HomeNavigatorScreen(), settings);
 
       case HomeScreen.route:
-        return MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-          settings: RouteSettings(name: HomeScreen.route)
-        );
+        return buildCustomBuilder(HomeScreen(), settings);
 
       case DoneShiftScreen.route:
-        return MaterialPageRoute(builder: (context) => DoneShiftScreen());
+        return buildCustomBuilder(DoneShiftScreen(), settings);
 
       case PlacesScreen.route:
-        return MaterialPageRoute(
-          builder: (context) => PlacesScreen(),
-          settings: RouteSettings(
-            name: PlacesScreen.route
-          )
-        );
+        return buildCustomBuilder(PlacesScreen(), settings);
 
       case PlaceDetailsScreen.route:
-        return MaterialPageRoute(builder: (context) => PlaceDetailsScreen(place: (settings.arguments as Map)['place'],));
+        return buildCustomBuilder(PlaceDetailsScreen(), settings);
 
       case PlaceHome.route:
-        return MaterialPageRoute(
-          builder: (context) => PlaceHome(),
-          settings: RouteSettings(name: PlaceHome.route)
-        );
-
-      // case CreateViolationScreen.route:
-      //   return MaterialPageRoute(builder: (context) => CreateViolationScreen());
+        return buildCustomBuilder(PlaceHome(), settings);
 
       case BoardsScreen.route:
-        return MaterialPageRoute(builder: (context) => BoardsScreen());
+        return buildCustomBuilder(BoardsScreen(), settings);
 
       case SavedViolationScreen.route:
-        return MaterialPageRoute(builder: (context) => SavedViolationScreen());
+        return buildCustomBuilder(SavedViolationScreen(), settings);
 
       case CompletedViolationsScreen.route:
-        return MaterialPageRoute(builder: (context) => CompletedViolationsScreen());
+        return buildCustomBuilder(CompletedViolationsScreen(), settings);
 
       case PlaceViolations.route:
-        return MaterialPageRoute(builder: (context) => PlaceViolations(placeId: (settings.arguments as Map)['id'],));
+        return buildCustomBuilder(PlaceViolations(
+          placeId: (settings.arguments as Map)['id'],
+        ), settings);
+
+      case TemplateWorkspace.route:
+        return buildCustomBuilder(TemplateWorkspace(), settings);
+
+      case ChoosePlateInputScreen.route:
+        return buildCustomBuilder(ChoosePlateInputScreen(), settings);
+
+      case PlateKeyboardInputScreen.router:
+        return buildCustomBuilder(PlateKeyboardInputScreen(), settings);
+
+      case PlateResultInfo.route:
+        return buildCustomBuilder(PlateResultInfo(), settings);
+
+      case CompletedViolationBriefInformation.route:
+        return buildCustomBuilder(CompletedViolationBriefInformation(
+          violation: (settings.arguments as Map)['violation'],
+        ), settings);
+
+      case CompletedViolationImages.route:
+        return buildCustomBuilder(CompletedViolationImages(), settings);
+
+      case SelectCarBrandScreen.route:
+        return buildCustomBuilder(SelectCarBrandScreen(), settings);
+
+      case SelectCarColorScreen.route:
+        return buildCustomBuilder(SelectCarColorScreen(), settings);
+
+      case SelectCarTypeScreen.route:
+        return buildCustomBuilder(SelectCarTypeScreen(), settings);
+
+      case QrCodeScanner.router:
+        return buildCustomBuilder(QrCodeScanner(), settings);
+
+      case LocalViolationDetailsScreen.route:
+        return buildCustomBuilder(LocalViolationDetailsScreen(), settings);
 
       case AboutScreen.route:
-        return MaterialPageRoute(builder: (context) => AboutScreen());
+        return buildCustomBuilder(AboutScreen(), settings);
+
+      case AddPrinterTest.route:
+        return buildCustomBuilder(AddPrinterTest(), settings);
 
       case TermsAndConditionsScreen.route:
-        return MaterialPageRoute(
-            builder: (context) => TermsAndConditionsScreen());
+        return buildCustomBuilder(TermsAndConditionsScreen(), settings);
       default:
-        return MaterialPageRoute(builder: (context) => UnknownRouteScreen());
+        return buildCustomBuilder(UnknownRouteScreen(), settings);
     }
   }
 }

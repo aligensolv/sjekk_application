@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sjekk_application/core/constants/app_images.dart';
-import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/data/models/user_model.dart';
 import 'package:sjekk_application/presentation/providers/auth_provider.dart';
@@ -55,9 +54,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 });
               }
             }
+
             return Center(
                     child: Container(
-                      padding: EdgeInsets.all(12.0),
+                      padding: const EdgeInsets.all(12.0),
                       child: SingleChildScrollView(
                         child: Form(
                           key: _formKey,
@@ -68,10 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 AppImages.kontroll,
                                 scale: 2,
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 12,
                               ),
-                              SizedBox(height: 12.0), 
+                              const SizedBox(height: 12.0), 
                               Text(
                                 "Login to your Account",
                                 style: TextStyle(
@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   fontSize: 24,
                                 ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 12,
                               ),
                               SecondaryTemplateTextFieldWithIcon(
@@ -98,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   return null;
                                 },
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 20,
                               ),
                               SecondaryTemplateTextFieldWithIcon(
@@ -118,13 +118,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                   return null;
                                 },
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 20.0,
                               ),
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: NormalTemplateButton(
-                                  text: 'Login',
+                                  text: 'LOGIN',
                                   onPressed: () async {
                                     if (_formKey.currentState != null) {
                                       if (_formKey.currentState!.validate()) {
@@ -150,10 +150,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                             }
                                             final authProvider = Provider.of<AuthProvider>(context,listen: false);
                                             authProvider.provideAuthenticationState(user.token.toString(), user);
-                                            Navigator.of(context).pushReplacement(
-                                                MaterialPageRoute(
-                                                  builder: (context) => const HomeNavigatorScreen()
-                                                )
+                                            Navigator.of(context).pushReplacementNamed(
+                                              HomeNavigatorScreen.route
                                             );
                                           }
                                         } 

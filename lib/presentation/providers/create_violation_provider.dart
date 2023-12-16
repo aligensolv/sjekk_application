@@ -10,6 +10,7 @@ import '../../data/repositories/remote/autosys_repository_impl.dart';
 
 enum CreateViolationProviderErrorType{
   saving_error,
+  getting_plate_info,
   none
 }
 
@@ -21,30 +22,29 @@ class CreateViolationProvider extends ChangeNotifier{
     Violation? s_violation,
     Place? place
   }){
-    savedViolation = Violation(
-      rules: s_violation?.rules ?? [], 
-      status: 'saved', 
-      createdAt: DateTime.now().toLocal().toString(), 
-      plateInfo: s_violation?.plateInfo ?? plateInfo!, 
-      carImages: s_violation?.carImages ?? [], 
-      place: s_violation?.place ?? place!, 
-      paperComment: s_violation?.paperComment ?? '', 
-      outComment: s_violation?.outComment ?? '', 
-      is_car_registered: registeredCar != null, 
-      registeredCar: registeredCar, 
-      completedAt: null
-    );
+    savedViolation = s_violation;
     notifyListeners();
   }
 
 
-  PlateInfo? plateInfo;
+  late PlateInfo plateInfo;
   RegisteredCar? registeredCar;
   bool isRegistered = false;
 
   bool errorState = false;
   String errorMessage = "";
   CreateViolationProviderErrorType errorType = CreateViolationProviderErrorType.none;
+
+  Violation? existingSavedViolation;
+
+  setExistingSavedViolation(String plate) async{
+    if(plate.isEmpty){
+      return;
+    }
+    Violation? _newSavedViolation = await ViolationRepositoryImpl().searchExistingSavedViolation(plate);
+    existingSavedViolation = _newSavedViolation;
+    notifyListeners();
+  }
 
   clearErrors(){
     errorState = false;
@@ -54,28 +54,29 @@ class CreateViolationProvider extends ChangeNotifier{
 
   clearAll(){
     isRegistered = false;
-    plateInfo = null;
     registeredCar = null;
+    existingSavedViolation = null;
+    errorState = false;
     errorType = CreateViolationProviderErrorType.none;
 
     notifyListeners();
   }
 
   final _violationRepository = ViolationRepositoryImpl();
-  Future<Violation?> saveViolation() async{
-    print(savedViolation);
+  Future<int?> saveViolation() async{
     try{
-      Violation resultSavedViolation = await _violationRepository.saveViolation(
-        violation: savedViolation!,
+      int result = await _violationRepository.saveViolation(
+        savedViolation!,
       );
       clearAll();
-      return resultSavedViolation;
+      return result;
     }catch(error){
+      // rethrow;
       errorState = true;
       errorMessage = error.toString();
       errorType = CreateViolationProviderErrorType.saving_error;
-      return null;
-    }
+      return 0;
+    } 
   }
 
   Future deleteViolation(Violation violation) async{
@@ -94,9 +95,6 @@ class CreateViolationProvider extends ChangeNotifier{
     required List<String> selectedRules
   }) async{
     try{
-      print(violation.toJson());
-      print(place.toJson());
-      print(selectedRules);
       await _violationRepository.createViolation(
         violation: violation,
         place: place,
@@ -123,21 +121,26 @@ class CreateViolationProvider extends ChangeNotifier{
           notifyListeners();
 
   }
-  Future<bool> getCarInfo(String plate) async{
+  Future getCarInfo(String plate) async{
     try{
+      if(plate.isEmpty){
+        PlateInfo _plateInfo = PlateInfo.unknown(plate);
+        setCarInfo(_plateInfo);
+        notifyListeners();
+        return;
+      }
       final AutosysRepositoryImpl autosysRepository = AutosysRepositoryImpl();
 
-      PlateInfo? _plateInfo = await autosysRepository.getCarInfo(plate);
+      PlateInfo _plateInfo = await autosysRepository.getCarInfo(plate);
       setCarInfo(_plateInfo);
-      return true;
     }catch(error){
-      print(error.toString());
-      isRegistered = false;
-      return false;
+      errorState = true;
+      errorType = CreateViolationProviderErrorType.getting_plate_info;
+      notifyListeners();
     }
   }
 
-  setCarInfo(PlateInfo? info){
+  setCarInfo(PlateInfo info){
     plateInfo = info;
     notifyListeners();
   }

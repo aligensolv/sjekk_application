@@ -1,14 +1,16 @@
-import 'package:sjekk_application/data/models/place_model.dart';
+import 'dart:convert';
+
+import 'place_model.dart';
 
 class RegisteredCar{
   final String boardNumber;
-  // final String id;
+  final String? id;
   final String registerationType;
   final String rank;
   final String startDate;
   final String endDate;
   final String createdAt;
-  // final Place place;
+  final Place? place;
 
   RegisteredCar({
     required this.boardNumber,
@@ -16,9 +18,9 @@ class RegisteredCar{
     required this.startDate, 
     required this.endDate,
     required this.createdAt,
-    required this.rank
-    // required this.place,
-    // required this.id
+    required this.rank,
+    required this.place,
+    required this.id
   });
 
   factory RegisteredCar.fromJson(Map json){
@@ -28,20 +30,22 @@ class RegisteredCar{
       startDate: json["start_date"],
       endDate: json["end_date"],
       createdAt: json["created_at"],
-      rank: json["rank"]
-      // id: json['_id'],
-      // place: Place.fromJson(json['place'])
+      rank: json["rank"],
+      place: json['place'] != null ? Place.fromJson(json['place']) : null,
+      id: json['_id'],
     );
   }
+
 
   Map toJson(){
     return {
       'plate_number': boardNumber,
       'registeration_type': registerationType,
       'start_date': startDate,
-      'end_date': endDate,
+      'end_date': endDate,  
       'created_at': createdAt,
       'rank': rank,
+      'place': place?.toJson()
     };
   }
 }

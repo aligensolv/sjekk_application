@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sjekk_application/core/constants/app_images.dart';
+import 'package:sjekk_application/core/utils/native_channels.dart';
+import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -30,6 +32,19 @@ class AboutScreen extends StatelessWidget {
               fontSize: 18,
               color: Colors.grey[600],
             ),
+          ),
+          SizedBox(height: 12),
+          FutureBuilder(
+            future: getDeviceUniqueId(), 
+            builder: (BuildContext context, AsyncSnapshot<String> snapshot) { 
+              if(snapshot.connectionState == ConnectionState.waiting){
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              return TemplateHeadlineText(snapshot.data!);
+            },
           ),
           SizedBox(height: 30),
           Container(

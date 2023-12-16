@@ -5,7 +5,8 @@ import 'package:sjekk_application/data/repositories/remote/violation_repository.
 class ViolationProvider extends ChangeNotifier{
   List<Violation> completedViolations = [];
   List<Violation> savedViolations = [];
-  List<Violation> currentPlaceViolations = [];
+  List<Violation> currentPlaceSavedViolations = [];
+  List<Violation> currentPlaceCompletedViolations = [];
   bool errorState = false;
   String errorMessage = "";
   bool loadingState = false;
@@ -44,7 +45,26 @@ class ViolationProvider extends ChangeNotifier{
       notifyListeners();
 
       ViolationRepositoryImpl violationRepositoryImpl = ViolationRepositoryImpl();
-      savedViolations = await violationRepositoryImpl.getSavedViolations();
+      savedViolations = await violationRepositoryImpl.getAllSavedViolations();
+      clearErrors();
+    }catch(e){
+      rethrow;
+      errorState = true;
+      errorMessage = e.toString();
+    }
+
+    loadingState = false;
+    notifyListeners();
+  }
+
+  fetchPlaceSavedViolations(String id) async{
+    try{
+      print(id);
+      loadingState = true;
+      notifyListeners();
+
+      ViolationRepositoryImpl violationRepositoryImpl = ViolationRepositoryImpl();
+      currentPlaceSavedViolations = await violationRepositoryImpl.getPlaceSavedViolations(id);
       clearErrors();
     }catch(e){
       errorState = true;
@@ -55,14 +75,14 @@ class ViolationProvider extends ChangeNotifier{
     notifyListeners();
   }
 
-  fetchPlaceViolations(String id) async{
+  fetchPlaceCompletedViolations(String id) async{
     try{
       print(id);
       loadingState = true;
       notifyListeners();
 
       ViolationRepositoryImpl violationRepositoryImpl = ViolationRepositoryImpl();
-      currentPlaceViolations = await violationRepositoryImpl.getPlaceViolations(id);
+      currentPlaceCompletedViolations = await violationRepositoryImpl.getPlaceCompletedViolations(id);
       clearErrors();
     }catch(e){
       errorState = true;

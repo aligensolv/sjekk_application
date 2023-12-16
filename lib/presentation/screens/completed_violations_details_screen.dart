@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sjekk_application/core/constants/app_images.dart';
 import 'package:sjekk_application/presentation/providers/violation_details_provider.dart';
@@ -8,6 +9,7 @@ import 'package:sjekk_application/presentation/widgets/template/components/templ
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
+import 'package:sjekk_application/presentation/widgets/template/widgets/empty_data_container.dart';
 import '../../data/models/rule_model.dart';
 import '../../data/models/violation_model.dart';
 import '../widgets/template/components/template_image.dart';
@@ -120,6 +122,7 @@ class _CompletedViolationDetailsScreenState extends State<CompletedViolationDeta
   }
 
 Widget CarInfoWidget() {
+  DateFormat formatter = DateFormat('HH:mm .dd.MM.yyyy');
   return Padding(
     padding: const EdgeInsets.all(12.0),
     child: SingleChildScrollView(
@@ -128,24 +131,26 @@ Widget CarInfoWidget() {
         children: [
           TemplateContainerCard(
             title: widget.violation.plateInfo.plate,
-            backgroundColor: widget.violation.is_car_registered ? Colors.blue : Colors.red,
+            backgroundColor: widget.violation.is_car_registered ? Colors.blue : dangerColor,
           ),
           12.h,
-            _buildInfoContainer('Type', widget.violation.plateInfo.type, icon: Icons.category),
-            _buildInfoContainer('Status', widget.violation.status.toUpperCase(), icon: FontAwesome.exclamation),
-            _buildInfoContainer('Brand', widget.violation.plateInfo.brand,icon: FontAwesome.car),
-            _buildInfoContainer('Year', widget.violation.plateInfo.year, icon: Icons.calendar_month),
-            _buildInfoContainer('Description', widget.violation.plateInfo.description, icon: Icons.text_fields),
-            _buildInfoContainer('Created At', widget.violation.createdAt, icon: Icons.date_range),
+            _buildInfoContainer('TYPE', widget.violation.plateInfo.type, icon: Icons.category),
+            _buildInfoContainer('STATUS', widget.violation.status.toUpperCase(), icon: FontAwesome.exclamation),
+            _buildInfoContainer('BRAND', widget.violation.plateInfo.brand,icon: FontAwesome.car),
+            _buildInfoContainer('YEAR', widget.violation.plateInfo.year, icon: Icons.calendar_month),
+            _buildInfoContainer('DESCRIPTION', widget.violation.plateInfo.description, icon: Icons.text_fields),
+            _buildInfoContainer('COLOR', widget.violation.plateInfo.color, icon: Icons.color_lens),
+            _buildInfoContainer('CREATED AT', formatter.format(DateTime.parse(widget.violation.createdAt)), icon: Icons.date_range),
     
           if(widget.violation.is_car_registered && widget.violation.registeredCar != null)
           Column(
             children: [
-              TemplateHeadlineText('More Information'),
+              TemplateHeadlineText('MORE INFORMATION'),
               12.h,
-                _buildInfoContainer('Regiseration type', widget.violation.registeredCar!.registerationType, icon: Icons.app_registration),
-                _buildInfoContainer('Fra', widget.violation.registeredCar!.startDate,icon: Icons.start),
-                _buildInfoContainer('Til', widget.violation.registeredCar!.endDate, icon: Icons.start)
+                _buildInfoContainer('RANK', widget.violation.registeredCar!.rank.toString().toUpperCase(), icon: Icons.star),
+                _buildInfoContainer('REGISTERATION TYPE', widget.violation.registeredCar!.registerationType, icon: Icons.app_registration),
+                _buildInfoContainer('FRA', widget.violation.registeredCar!.startDate,icon: Icons.start),
+                _buildInfoContainer('TIL', widget.violation.registeredCar!.endDate, icon: Icons.start)
             ],
           )
         ],
@@ -154,7 +159,7 @@ Widget CarInfoWidget() {
   );
 }
 
-Widget _buildInfoContainer(String title, String value, {IconData? icon = Icons.info_outline}) {
+Widget _buildInfoContainer(String title, String? value, {IconData? icon = Icons.info_outline}) {
   return Container(
     margin: const EdgeInsets.only(bottom: 12),
     decoration: const BoxDecoration(
@@ -184,7 +189,7 @@ Widget _buildInfoContainer(String title, String value, {IconData? icon = Icons.i
               ),
               SizedBox(height: 8),
               Text(
-                value,
+                value ?? '',
                 style: TextStyle(fontSize: 16),
               ),
             ],
@@ -239,24 +244,33 @@ Widget ImagesWidget(){
 Widget RulesWidget(){
   return Consumer<ViolationDetailsProvider>(
     builder: (BuildContext context, ViolationDetailsProvider violationDetailsProvider, Widget? child) { 
+      if(violationDetailsProvider.violation.rules.isEmpty){
+        return EmptyDataContainer(
+          text: 'NO RULES',
+        );
+      }
+      
           return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
               padding: EdgeInsets.zero,
               itemCount: violationDetailsProvider.violation.rules.length,
+              separatorBuilder: ((context, index) {
+                return 12.h;
+              }),
               itemBuilder: ((context, index) {
                 Rule rule = violationDetailsProvider.violation.rules[index];
                 return GestureDetector(
                   onTap: (){
           
                   },
-                  child: TemplateTileContainerCardWithExpandedIcon(
-                    title: '${rule.name} (${rule.charge} \$)',
-                    icon: Icons.euro,
+                  child: TemplateContainerCard(
+                    title: '${rule.name} (${rule.charge} kr)',
+                    backgroundColor: primaryColor,
                   ),
                 );
               }),

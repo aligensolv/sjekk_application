@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
-
+import '../theme/colors_theme.dart' as tc;
 // enum OptionMenuFlags{
 //   normal,
 //   save,
@@ -25,7 +25,7 @@ class TemplateOption extends StatelessWidget {
 
     this.backgroundColor,
     this.iconColor,
-    this.textColor
+    this.textColor = tc.textColor
   });
 
   @override

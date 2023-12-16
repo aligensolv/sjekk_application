@@ -63,7 +63,7 @@ class NormalTemplateTextFieldWithIcon extends StatelessWidget {
       validator: validator,
       textAlignVertical: TextAlignVertical.center,
       decoration: textFieldDecorationTheme.copyWith(
-        hintText: hintText,
+        hintText: hintText.toUpperCase(),
         prefixIcon: Icon(icon)
       ),
       style: textFieldTextStyle,
@@ -112,7 +112,7 @@ class SecondaryTemplateTextField extends StatelessWidget {
       onChanged: onChanged,
       readOnly: disabled ?? false,
       decoration: anotherStyleTextFieldDecorationTheme.copyWith(
-        hintText: hintText,
+        hintText: hintText.toUpperCase(),
         isDense: true,
         isCollapsed: true,
         prefixIcon: prefixIcon != null ? GestureDetector(
@@ -165,7 +165,7 @@ class SecondaryTemplateTextFieldWithIcon extends StatelessWidget {
       onChanged: onChanged,
       readOnly: disabled ?? false,
       decoration: anotherStyleTextFieldDecorationTheme.copyWith(
-        hintText: hintText,
+        hintText: hintText.toUpperCase(),
         prefixIcon: Icon(icon)
       ),
       style: anotherStyleTextFieldTextStyle,

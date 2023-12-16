@@ -1,10 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
-import 'package:sjekk_application/presentation/widgets/template/components/template_list_tile.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
-import '../../core/helpers/theme_helper.dart';
 import 'printers_settings.dart';
 
 class SettingsScreen extends StatelessWidget {

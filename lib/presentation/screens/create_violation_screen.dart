@@ -395,7 +395,7 @@
 //           height: 40,
 //           alignment: Alignment.center,
 //           decoration: BoxDecoration(
-//             color: value.isRegistered ? Colors.blue : Colors.red
+//             color: value.isRegistered ? Colors.blue : dangerColor
 //           ),
 //           child: Text(value.plateInfo!.plate,style: TextStyle(
 //             color: Colors.white

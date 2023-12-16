@@ -6,6 +6,7 @@ import 'package:sjekk_application/presentation/widgets/template/components/templ
 import 'package:sjekk_application/presentation/widgets/template/components/template_text_field.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
+import 'package:sjekk_application/presentation/widgets/template/widgets/empty_data_container.dart';
 
 import '../../data/models/place_model.dart';
 import 'place_details.dart';
@@ -43,63 +44,73 @@ class _PlacesScreenState extends State<PlacesScreen> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: scaffoldColor,
-        body: Consumer<PlaceProvider>(
-          builder: (BuildContext context, PlaceProvider value, Widget? child) {
-            // if(value.loadingState){
-            //   return Center(
-            //     child: CircularProgressIndicator(),
-            //   );
-            // }
-      
-            if(value.errorState){
-              return Center(
-                child: Text(value.errorMessage),
-              );
-            }
-      
-            List<Place> places = value.places;
-      
-            return Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                children: [
-                  NormalTemplateTextFieldWithIcon(
-                    onChanged: (val){
-                      value.searchPlaces(val);
-                    }, 
-                    icon: Icons.search,
-                    hintText: 'Search'
-                  ),
-                  12.h,
-                  ListView.separated(
-                    padding: EdgeInsets.zero,
-                    separatorBuilder: ((context, index) {
-                      return 6.h;
-                    }),
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: places.length,
-                    itemBuilder: (context, index) {
-                      Place place = places[index];
-                
-                      return TemplateContainerCard(
-                        title: '${place.code} \n${place.location}',
-                        backgroundColor: primaryColor,
-                        alignment: Alignment.centerLeft,
-                        onTap: (){
-                          value.setSelectedPlace(place);
-                          value.setSelectedPlaceLoginTime();
-                          Navigator.pushNamed(context, PlaceDetailsScreen.route,arguments: {
-                            'place': place
-                          });
-                        },
-                      );
-                    },
-                  ),
-                ],
+        body: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            children: [
+              NormalTemplateTextFieldWithIcon(
+                onChanged: (val){
+                  context.read<PlaceProvider>().searchPlaces(val);
+                }, 
+                icon: Icons.search,
+                hintText: 'Search'
               ),
-            );
-          },
+              12.h,
+              Consumer<PlaceProvider>(
+                builder: (BuildContext context, PlaceProvider value, Widget? child) {
+                  // if(value.loadingState){
+                  //   return Center(
+                  //     child: CircularProgressIndicator(),
+                  //   );
+                  // }
+              
+                  if(value.errorState){
+                    return Center(
+                      child: Text(value.errorMessage),
+                    );
+                  }
+              
+                  List<Place> places = value.places;
+        
+                  if(places.isEmpty){
+                    return Expanded(
+                      child: EmptyDataContainer(
+                        text: 'No places available',
+                      ),
+                    );
+                  }
+              
+                  return Column(
+                    children: [
+                      ListView.separated(
+                        padding: EdgeInsets.zero,
+                        separatorBuilder: ((context, index) {
+                          return 6.h;
+                        }),
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: places.length,
+                        itemBuilder: (context, index) {
+                          Place place = places[index];
+                    
+                          return TemplateContainerCard(
+                            title: '${place.code} \n${place.location}',
+                            backgroundColor: primaryColor,
+                            alignment: Alignment.centerLeft,
+                            onTap: (){
+                              value.setSelectedPlace(place);
+                              value.setSelectedPlaceLoginTime();
+                              Navigator.pushNamed(context, PlaceDetailsScreen.route);
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

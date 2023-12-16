@@ -5,9 +5,14 @@ import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:sjekk_application/core/utils/router_utils.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
+import 'package:sjekk_application/data/models/violation_model.dart';
+import 'package:sjekk_application/presentation/providers/place_provider.dart';
 import 'package:sjekk_application/presentation/screens/bottom_navigator_screen.dart';
+import 'package:sjekk_application/presentation/screens/select_car_type_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_option.dart';
@@ -19,6 +24,7 @@ import 'package:sjekk_application/presentation/widgets/template/theme/colors_the
 import '../../data/models/rule_model.dart';
 import '../providers/create_violation_provider.dart';
 import '../providers/local_violation_details_provider.dart';
+import '../providers/violation_details_provider.dart';
 import '../widgets/template/components/template_dialog.dart';
 import '../widgets/template/components/template_image.dart';
 import 'gallery_view.dart';
@@ -63,39 +69,44 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
         builder: (context){
           return TemplateOptionsMenu(
           headerText: 'OPTIONS',
+          headerColor: Colors.black54,
           options: [
             TemplateOption(
               text: 'SAVE', 
               icon: Icons.download, 
-              backgroundColor: secondaryColor,
-              textColor: Colors.white,
               iconColor: Colors.white,
+              textColor: Colors.white,
+              backgroundColor: secondaryColor,
               onTap: () async{
-                final createViolationProvider = Provider.of<CreateViolationProvider>(context, listen: false);
-                await createViolationProvider.setSavedViolation(
-                  s_violation: context.read<LocalViolationDetailsProvider>().localViolationCopy
-                );
-                await createViolationProvider.saveViolation(
+                final provider = context.read<LocalViolationDetailsProvider>();
+                final createProvider = context.read<CreateViolationProvider>();
 
+                Violation vl = provider.localViolationCopy;
+                vl.status = 'saved';
+
+                createProvider.setSavedViolation(
+                  s_violation: vl,
+                  place: context.read<PlaceProvider>().selectedPlace
                 );
 
-                if(createViolationProvider.errorState && createViolationProvider.errorType == CreateViolationProviderErrorType.saving_error){
-                  SnackbarUtils.showSnackbar(context, createViolationProvider.errorMessage,type: SnackBarType.failure);
-                }else{
-                  entry?.remove();
-                  SnackbarUtils.showSnackbar(context, 'VL was saved', type: SnackBarType.info);
-                  Navigator.of(context).popUntil(
-                    (route) => route.settings.name == PlaceHome.route
-                  );
-                }
+                await createProvider.saveViolation();
+
+                entry?.remove();
+                entry = null;
+
+                SnackbarUtils.showSnackbar(context, 'VL is saved');
+
+                Navigator.of(context).popUntil(
+                  (route) => route.settings.name == PlaceHome.route
+                );
               }
             ),
             TemplateOption(
               text: 'DELETE', 
-              icon: Icons.close, 
-              backgroundColor: Colors.red,
+              backgroundColor: dangerColor,
               textColor: Colors.white,
               iconColor: Colors.white,
+              icon: Icons.close,
               onTap: (){
                 entry?.remove();
                 Navigator.pop(context);
@@ -104,6 +115,9 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
             TemplateOption(
               text: 'BACK', 
               icon: Icons.redo,
+              backgroundColor: Colors.black12,
+              iconColor: Colors.white,
+              textColor: Colors.white,
               onTap: (){
                 entry?.remove();
                 // Navigator.pop(context);
@@ -118,21 +132,6 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
     Overlay.of(context).insert(
       entry!
     );
-
-    // if(flag != null && flag != OptionMenuFlags.cancel){
-    //   if(flag == OptionMenuFlags.saveViolation){
-    //     SnackbarUtils.showSnackbar(context, 'VL was saved', type: SnackBarType.info);
-    //     Navigator.of(context).popUntil(
-    //       (route) => route.settings.name == PlaceHome.route
-    //     );
-    //   }else if(flag == OptionMenuFlags.savingError){
-    //     final createViolationProvider = Provider.of<CreateViolationProvider>(context, listen: false);
-    //     SnackbarUtils.showSnackbar(context, createViolationProvider.errorMessage,type: SnackBarType.failure);
-    //   }else if(flag == OptionMenuFlags.deleteViolation){
-    //     Navigator.pop(context);
-    //   }
-    // }
-
     return true;
   }
 
@@ -145,10 +144,10 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
 
     DateTime parsedCreatedAt = DateTime.parse(provider.localViolationCopy.createdAt);
       int maxTimePolicy = 0;
-      if(provider.localViolationCopy.rules.any((element) => element.timePolicy > 0)){
+      if(provider.localViolationCopy.rules.any((element) => element.policyTime > 0)){
         maxTimePolicy = provider.localViolationCopy.rules.map((e){
-          print(e.timePolicy.toString());
-          return e.timePolicy;
+          print(e.policyTime.toString());
+          return e.policyTime;
         }).reduce(max);
       }
 
@@ -180,6 +179,9 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
         onTap: (){
           entry?.remove();
           entry = null;
+
+          imageOverLayEntry?.remove();
+          imageOverLayEntry = null;
         },
         child: Scaffold(
           body: Column(
@@ -293,75 +295,45 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
 
 
 Widget CarInfoWidget() {
+  DateFormat formatter = DateFormat('HH:mm .dd.MM.yyyy');
   return Padding(
     padding: const EdgeInsets.all(12.0),
     child: SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Row(
-          //   children: [
-          //     Expanded(
-          //                     child: NormalTemplateButton(
-          //                                   onPressed: () async{
-          //                                     final createViolationProvider = Provider.of<CreateViolationProvider>(context, listen: false);
-          //                                     await createViolationProvider.setSavedViolation(
-          //                                       s_violation: context.read<LocalViolationDetailsProvider>().localViolationCopy
-          //                                     );
-          //                                     await createViolationProvider.saveViolation(
-
-          //                                     );
-
-          //                                     if(createViolationProvider.errorState && createViolationProvider.errorType == CreateViolationProviderErrorType.saving_error){
-          //                                       SnackbarUtils.showSnackbar(context, createViolationProvider.errorMessage,type: SnackBarType.failure);
-          //                                     }else{
-          //                                       SnackbarUtils.showSnackbar(context, 'VL was saved', type: SnackBarType.info);
-          //                                       Navigator.popUntil(
-          //                                         context, 
-          //                                         (route) => route.settings.name == PlaceHome.route
-          //                                       );
-          //                                     }
-          //                                   }, 
-          //                                   backgroundColor: secondaryColor,
-  
-          //                                   text: 'SAVE'
-          //                                 ),
-          //                   ),
-          //                   12.w,
-          //     Expanded(
-          //                     child: InfoTemplateButton(
-          //                                   onPressed: () async{
-          //                                     Navigator.pop(context);
-          //                                   }, 
-          //                                   text: 'CANCEL'
-          //                                 ),
-          //                   ),
-          //   ],
-          // ),
-          // 12.h,
           TemplateContainerCard(
             title: context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.plate,
             height: 40,
   
-            backgroundColor: context.read<LocalViolationDetailsProvider>().localViolationCopy.is_car_registered ? Colors.blue : Colors.red,
+            backgroundColor: context.read<LocalViolationDetailsProvider>().localViolationCopy.is_car_registered ? Colors.blue : dangerColor,
           ),
           12.w,
           12.h,
-          _buildInfoContainer('Type', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.type, icon: Icons.category),
-          _buildInfoContainer('Status', context.read<LocalViolationDetailsProvider>().localViolationCopy.status.toUpperCase(), icon: FontAwesome.exclamation),
-          _buildInfoContainer('Brand', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.brand,icon: FontAwesome.car),
-          _buildInfoContainer('Year', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.year, icon: Icons.calendar_month),
-          _buildInfoContainer('Description', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.description, icon: Icons.text_fields),
-          _buildInfoContainer('Created At', context.read<LocalViolationDetailsProvider>().localViolationCopy.createdAt, icon: Icons.date_range),
+          _buildInfoContainer(
+            'TYPE', 
+            context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.type, icon: Icons.category,
+            editable: true,
+            route: SelectCarTypeScreen()
+          ),
+          _buildInfoContainer('STATUS', context.read<LocalViolationDetailsProvider>().localViolationCopy.status.toUpperCase(), icon: FontAwesome.exclamation),
+          _buildInfoContainer('BRAND', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.brand,icon: FontAwesome.car),
+          _buildInfoContainer('YEAR', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.year, icon: Icons.calendar_month),
+          _buildInfoContainer('DESCRIPTION', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.description, icon: Icons.text_fields),
+          _buildInfoContainer('COLOR', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.color, icon: Icons.color_lens),
+          _buildInfoContainer('CREATED AT', formatter.format(
+            DateTime.parse(context.read<LocalViolationDetailsProvider>().localViolationCopy.createdAt)
+          ) , icon: Icons.date_range),
     
           if(context.read<LocalViolationDetailsProvider>().localViolationCopy.is_car_registered && context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar != null)
           Column(
             children: [
-              TemplateHeadlineText('More Information'),
+              TemplateHeadlineText('MORE INFORMATION'),
               12.h,
-              _buildInfoContainer('Regiseration type', context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar!.registerationType),
-              _buildInfoContainer('Fra', context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar!.startDate),
-              _buildInfoContainer('Til', context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar!.endDate)
+              _buildInfoContainer('RANK', context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar!.rank, icon: Icons.star),
+              _buildInfoContainer('REGISTERATION TYPE', context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar!.registerationType,icon:  Icons.app_registration),
+              _buildInfoContainer('FRA', context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar!.startDate, icon: Icons.start),
+              _buildInfoContainer('TIL', context.read<LocalViolationDetailsProvider>().localViolationCopy.registeredCar!.endDate, icon: Icons.start)
             ],
           )
         ],
@@ -370,48 +342,63 @@ Widget CarInfoWidget() {
   );
 }
 
-Widget _buildInfoContainer(String title, String value, {IconData? icon = Icons.info_outline}) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    decoration: const BoxDecoration(
-      color: Colors.black12,
-    ),
-    child: Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(12.0),
-          alignment: Alignment.center,
-          child: Icon(icon,size: 30,color: Colors.white,),
-          color: primaryColor,
-          height:60,
-          width: 60,
-        ),
-        12.w,
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: TextStyle(fontSize: 16),
-              ),
-            ],
+Widget _buildInfoContainer(
+  String title, 
+  String? value, 
+  {IconData? icon = Icons.info_outline, bool editable = false, Widget? route}
+) {
+  return GestureDetector(
+    onTap: editable && route != null ? () async{
+      Navigator.of(context).push(
+        buildCustomBuilder(route, RouteSettings())
+      );
+    } : null,
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: const BoxDecoration(
+        color: Colors.black12,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(12.0),
+            alignment: Alignment.center,
+            child: Icon(icon,size: 30,color: Colors.white,),
+            color: primaryColor,
+            height:60,
+            width: 60,
           ),
-        ),
-      ],
+          12.w,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  value ?? '',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
 
+OverlayEntry? imageOverLayEntry;
+
 Widget ImagesWidget(){
+    DateFormat format = DateFormat('HH:mm');
+
   return Consumer<LocalViolationDetailsProvider>(
     builder: (BuildContext context, LocalViolationDetailsProvider localViolationDetailsProvider, Widget? child) {  
       return Padding(
@@ -429,17 +416,88 @@ Widget ImagesWidget(){
                       
                         itemCount: localViolationDetailsProvider.localViolationCopy.carImages.length,
                       itemBuilder: (context,index){
-                        return TemplateFileImageContainer(
-                          path: localViolationDetailsProvider.localViolationCopy.carImages[index].path,
-                          onTap: (){
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => TemplateGalleryViewScreen(
-                                images: localViolationDetailsProvider.localViolationCopy.carImages, 
-                                initialIndex: index,
-                                gallerySource: GallerySource.file,
-                              ))
-                            );
+                        return GestureDetector(
+                          onLongPress: () async{
+                            if(imageOverLayEntry?.mounted ?? false){
+          imageOverLayEntry?.remove();
+        }
+
+          imageOverLayEntry = OverlayEntry(
+          builder: (context){
+            return TemplateOptionsMenu(
+            headerText: 'OPTIONS',
+            headerColor: Colors.black.withOpacity(0.7),
+            options: [
+                TemplateOption(
+                  text: 'DELETE', 
+                  icon: Icons.close, 
+                  backgroundColor: dangerColor,
+                  iconColor: Colors.white,
+                  textColor: Colors.white,
+                  onTap: () async{
+                    localViolationDetailsProvider.removeImage(
+                      localViolationDetailsProvider.localViolationCopy.carImages[index].id
+                    );
+
+                    imageOverLayEntry?.remove();
+                    imageOverLayEntry = null;
+                  },
+                ),
+
+              TemplateOption(
+                text: 'BACK', 
+                icon: Icons.redo,
+                iconColor: Colors.white,
+                textColor: Colors.white,
+                backgroundColor: Colors.black12,
+                onTap: () async{
+                  imageOverLayEntry?.remove();
+                  imageOverLayEntry = null;
+                }
+              ),
+            ],
+          );
+          }
+        );
+
+
+      Overlay.of(context).insert(
+        imageOverLayEntry!
+      );
                           },
+                          child: Stack(
+                            children: [
+                              TemplateFileImageContainer(
+                                path: localViolationDetailsProvider.localViolationCopy.carImages[index].path,
+                                onTap: (){
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (context) => TemplateGalleryViewScreen(
+                                      images: localViolationDetailsProvider.localViolationCopy.carImages, 
+                                      initialIndex: index,
+                                      gallerySource: GallerySource.file,
+                                    ))
+                                  );
+                                },
+                              ),
+                        
+                              Align(
+                                  alignment: Alignment.bottomLeft,
+                                  child: Container(
+                                    height: 40,
+                                    alignment: Alignment.center,
+                                    color: Colors.black54,
+                                    child: Text(
+                                      format.format(
+                                        DateTime.parse(localViolationDetailsProvider.localViolationCopy.carImages[index].date)
+                                      ),
+                                      style: TextStyle(
+                                        color: Colors.white
+                                      ),
+                                    ),
+                                  ),
+                                )
+                            ],
+                          ),
                         );
                       },
                       
@@ -488,10 +546,9 @@ Widget RulesWidget(){
                   onTap: (){
           
                   },
-                  child: TemplateTileContainerCardWithExpandedIcon(
-                    height: 40,
-                    icon: Icons.euro_symbol,
-                    title: '${rule.name} (${rule.charge} \$)',
+                  child: TemplateContainerCard(
+                    backgroundColor: primaryColor,
+                    title: '${rule.name} (${rule.charge} kr)',
                   ),
                 );
               }),
@@ -592,15 +649,15 @@ Widget PrintWidget(){
                       XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
                       if(file != null){
                         await localViolationDetailsProvider.pushImage(file.path);
+                        SnackbarUtils.showSnackbar(context, 'VL is completed');
+                        Navigator.popUntil(context, (route) => route.settings.name == BottomScreenNavigator.route || route.settings.name == PlaceHome.route);
                         await Provider.of<CreateViolationProvider>(context, listen: false).createViolation(
                           violation: localViolationDetailsProvider.localViolationCopy,
                           place: localViolationDetailsProvider.localViolationCopy.place,
                           selectedRules: localViolationDetailsProvider.localViolationCopy.rules.map((e){
-                            return e.id;
+                          return e.id!;
                           }).toList()
                         );
-                        SnackbarUtils.showSnackbar(context, 'VL is completed');
-                        Navigator.popUntil(context, (route) => route.settings.name == BottomScreenNavigator.route || route.settings.name == PlaceHome.route);
                       }
                   }, text: 'PRINT',),
                 ),

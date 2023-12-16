@@ -6,6 +6,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 
+PageRouteBuilder buildCustomBuilder(Widget screen, RouteSettings settings){
+  return PageRouteBuilder(
+    pageBuilder: (_context,animation,___){
+      return screen;
+    },
+    settings: settings,
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
+  
+  );
+}
+
 Future<void> showExitConfirmationDialog(BuildContext context) async {
     await showDialog(
         context: context,

@@ -2,19 +2,19 @@ import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
+import 'package:sjekk_application/core/utils/sound_utils.dart';
 import 'package:sjekk_application/presentation/providers/keyboard_input_provider.dart';
 import 'package:sjekk_application/presentation/screens/place_home.dart';
+import 'package:sjekk_application/presentation/screens/plate_result_info.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
-import 'package:sjekk_application/presentation/widgets/template/components/template_dialog.dart';
-import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text_field.dart';
-// import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
 import '../providers/create_violation_provider.dart';
 import 'plate_result_controller.dart';
 
 class PlateKeyboardInputScreen extends StatefulWidget {
+  static const String router = "plate_keyboard_input_screen";
   const PlateKeyboardInputScreen({super.key});
 
   @override
@@ -47,11 +47,11 @@ class _PlateKeyboardInputScreenState extends State<PlateKeyboardInputScreen> {
       child: Scaffold(
         backgroundColor: scaffoldColor,
         body: Padding(
-          padding: EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12.0),
           child: Column(
             children: [
-              KeyboardVisualInput(),
-              SizedBox(height: 12,),
+              const KeyboardVisualInput(),
+              const SizedBox(height: 12,),
               Consumer<KeyboardInputProvider>(
                 builder: (BuildContext context, KeyboardInputProvider keyboardInputProvider, Widget? child) { 
                   if(keyboardInputProvider.mode == KeyboardMode.letters){
@@ -61,31 +61,29 @@ class _PlateKeyboardInputScreenState extends State<PlateKeyboardInputScreen> {
                   return KeyboardDigits();
                 },
               ),
-              Spacer(),
+              const Spacer(),
               NormalTemplateButton(
                 onPressed: () async{
                   final keyboardProvider = context.read<KeyboardInputProvider>();
                   final createViolationProvider = context.read<CreateViolationProvider>();
 
-                  await createViolationProvider.getCarInfo(keyboardProvider.plate); 
-                  await createViolationProvider.getSystemCar(keyboardProvider.plate);
-
-                  if(createViolationProvider.plateInfo == null){
-                    SnackbarUtils.showSnackbar(
-                      context, 
-                      'Could not found this plate number'
-                    );
-                  }else{
+                  await createViolationProvider.getCarInfo(keyboardProvider.plate);                  
+                    await createViolationProvider.getSystemCar(keyboardProvider.plate);
+                    await createViolationProvider.setExistingSavedViolation(keyboardProvider.plate);
+                    
+                    if(createViolationProvider.registeredCar != null){
+                      await playCorrectSound();
+                    }else{
+                      await playWrongSound();
+                    }
                     keyboardProvider.clearPlate();
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => PlateResultController()
-                      ),
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      PlateResultInfo.route,
                       (route) => route.settings.name == PlaceHome.route
                     );
-                  }
+                    
                 }, 
-                backgroundColor: Colors.green,
+                backgroundColor: Colors.green,  
                 width: double.infinity,
                 text: 'COMPLETE',
               )
@@ -122,10 +120,10 @@ class _KeyboardVisualInputState extends State<KeyboardVisualInput> {
           hintText: '',
           disabled: true,
           controller: visualController,
-          suffixIcon: Icon(
+          suffixIcon: const Icon(
             Icons.close,
             size: 30,
-            color: Colors.red,
+            color: dangerColor,
           ),
           onPrefixIconTapped: (){
             Provider.of<KeyboardInputProvider>(context, listen: false).rollback();
@@ -133,7 +131,7 @@ class _KeyboardVisualInputState extends State<KeyboardVisualInput> {
           onSuffixIconTapped: (){
             Provider.of<KeyboardInputProvider>(context, listen: false).clearPlate();
           },
-          prefixIcon: Icon(
+          prefixIcon: const Icon(
             Icons.arrow_back,
             size: 30,
             color: Colors.black45,
@@ -161,7 +159,7 @@ class KeyboardLetterBox extends StatelessWidget {
         height: (size.width - 44) * 0.24,
         alignment: Alignment.center,
         color: primaryColor,
-        child: Text(letter,style: TextStyle(
+        child: Text(letter,style: const TextStyle(
           fontSize: 34,
           color: Colors.white,
           fontWeight: FontWeight.bold
@@ -219,7 +217,7 @@ class KeyboardDigitBox extends StatelessWidget {
         height: (size.width - 44) * 0.3333,
         alignment: Alignment.center,
         color: primaryColor,
-        child: Text(letter,style: TextStyle(
+        child: Text(letter,style: const TextStyle(
           fontSize: 40,
           color: Colors.white,
           fontWeight: FontWeight.bold
@@ -232,7 +230,7 @@ class KeyboardDigitBox extends StatelessWidget {
 class KeyboardDigits extends StatelessWidget {
   KeyboardDigits({super.key});
 
-  final List<String> letters = "1234567890".split('');
+  final List<String> letters = "123456789 0".split('');
 
   @override
   Widget build(BuildContext context) {

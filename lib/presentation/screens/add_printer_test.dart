@@ -11,6 +11,7 @@ import 'package:sjekk_application/presentation/widgets/template/theme/colors_the
 
 
 class AddPrinterTest extends StatefulWidget {
+  static const String route = "add_printer_test";  
   const AddPrinterTest({Key? key}) : super(key: key);
 
   @override
@@ -76,7 +77,7 @@ class _AddPrinterTestState extends State<AddPrinterTest> {
                 }
                 
                 Navigator.of(context).pop();
-                SnackbarUtils.showSnackbar(context, 'Printer created successfully',type: SnackBarType.success);
+                SnackbarUtils.showSnackbar(context, 'Printer created successfully');
           }, 
           title: 'Confirmation', 
           message: 'Are you sure you want to create this printer?'

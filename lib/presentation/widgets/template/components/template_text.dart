@@ -4,14 +4,18 @@ import 'package:sjekk_application/presentation/widgets/template/theme/colors_the
 
 class TemplateHeaderText extends StatelessWidget {
   final String text;
-  const TemplateHeaderText(this.text, {super.key});
+  TextDecoration? decoration;
+  Color? color;
+
+  TemplateHeaderText(this.text, {super.key, this.color, this.decoration});
 
   @override
   Widget build(BuildContext context) {
     return Text(text, style: TextStyle(
       fontSize: 24,
-      color: textColor
-    ),);
+      color: color ?? textColor,
+      decoration: decoration
+    ));
   }
 }
 

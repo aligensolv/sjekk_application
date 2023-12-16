@@ -1,7 +1,6 @@
 import 'package:sjekk_application/data/models/place_model.dart';
 import 'package:sjekk_application/data/models/registered_car_model.dart';
 
-import '../../data/models/plate_info_model.dart';
 
 abstract class ICarRepository{
   Future<List<RegisteredCar>> getAllCars();

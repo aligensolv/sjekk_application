@@ -7,6 +7,7 @@ import 'package:sjekk_application/presentation/providers/place_provider.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
+import 'package:sjekk_application/presentation/widgets/template/widgets/empty_data_container.dart';
 import 'package:sjekk_application/presentation/widgets/template/widgets/registered_car_info.dart';
 
 import '../widgets/template/components/template_text_field.dart';
@@ -30,6 +31,12 @@ class _BoardsScreenState extends State<BoardsScreen> {
       Place place = Provider.of<PlaceProvider>(context, listen: false).selectedPlace!;
       await Provider.of<CarProvider>(context, listen: false).fetchCarsByPlace(place);
     });
+  }
+
+  @override
+  void dispose() {
+    
+    super.dispose();
   }
 
   @override
@@ -68,10 +75,8 @@ class _BoardsScreenState extends State<BoardsScreen> {
                     }
                   
                     if (value.cars.isEmpty) {
-                      return Center(
-                        child: TemplateHeadlineText(
-                          'No cars available'
-                        ),
+                      return EmptyDataContainer(
+                        text: 'No cars',
                       );
                     }
                   

@@ -69,7 +69,7 @@ class _TemplateGalleryViewScreenState extends State<TemplateGalleryViewScreen> {
           return PhotoViewGalleryPageOptions(
 
             imageProvider: provider,
-            initialScale: PhotoViewComputedScale.contained * 0.8,
+            initialScale: PhotoViewComputedScale.contained,
             heroAttributes: PhotoViewHeroAttributes(
               tag: widget.images[index].path
             )

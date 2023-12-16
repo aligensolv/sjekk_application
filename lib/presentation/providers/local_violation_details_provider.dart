@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sjekk_application/data/models/car_image_model.dart';
 import 'package:sjekk_application/data/models/rule_model.dart';
 
@@ -26,9 +28,9 @@ class LocalViolationDetailsProvider extends ChangeNotifier{
   bool isTimerActive = false;
 
   updateTimePolicy(){
-    if(localViolationCopy.rules.any((element) => element.timePolicy > 0)){
+    if(localViolationCopy.rules.any((element) => element.policyTime > 0)){
       print('yes bigger on found');
-      int newMaxTimePolicy = localViolationCopy.rules.map((e) => e.timePolicy).reduce(max);
+      int newMaxTimePolicy = localViolationCopy.rules.map((e) => e.policyTime).reduce(max);
 
       print('max is $newMaxTimePolicy');
 
@@ -87,9 +89,27 @@ class LocalViolationDetailsProvider extends ChangeNotifier{
     notifyListeners();
   }
 
-  pushImage(String path){
-    CarImage carImage = CarImage.fromString(path);
+  pushImage(String path) async {
+    final String localPath = (await getApplicationDocumentsDirectory()).path;
+
+
+    final File _file = File(path);
+    String cachedPath = '$localPath/${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(176676767)}.png';
+    await _file.copy(cachedPath);
+
+    CarImage carImage = CarImage.fromString(cachedPath);
+    int id = Random().nextInt(9999990);
+    carImage.id = id;
+
     localViolationCopy.carImages.add(carImage);
+    notifyListeners();
+  }
+
+  removeImage(int? id){
+    localViolationCopy.carImages = localViolationCopy.carImages.where((element){
+      return element.id != id;
+    }).toList();
+
     notifyListeners();
   }
 

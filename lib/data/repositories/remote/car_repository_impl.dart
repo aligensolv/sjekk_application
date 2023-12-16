@@ -1,12 +1,12 @@
 import 'dart:convert';
 
+import 'package:sjekk_application/core/utils/logger.dart';
 import 'package:sjekk_application/data/models/place_model.dart';
 import 'package:sjekk_application/data/models/registered_car_model.dart';
 import 'package:sjekk_application/domain/repositories/car_repository.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../core/constants/app_constants.dart';
-import '../../models/plate_info_model.dart';
 import '../local/cache_repository_impl.dart';
 
 class CarRepositoryImpl implements ICarRepository{
@@ -56,6 +56,7 @@ class CarRepositoryImpl implements ICarRepository{
 
       if (response.statusCode == 200) {
         List decoded = jsonDecode(response.body);
+        pwarnings(decoded);
 
         List<RegisteredCar> cars = decoded.map((el) {
           return RegisteredCar.fromJson(el);

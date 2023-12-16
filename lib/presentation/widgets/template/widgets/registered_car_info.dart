@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:sjekk_application/core/constants/app_images.dart';
-import 'package:sjekk_application/data/models/plate_info_model.dart';
-import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
@@ -28,14 +25,14 @@ class RegisteredCarInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: 210,
       child: Row(
         children: [
           Expanded(
             child: Container(
               color: Colors.green,
-              padding: EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(8.0),
               
               child: Stack(
                 children: [
@@ -58,11 +55,11 @@ class RegisteredCarInfo extends StatelessWidget {
                       TemplateParagraphText('PL  ${registeredCar.boardNumber}'),
                       TemplateParagraphText(registeredCar.registerationType),
                       8.h,
-                      TemplateParagraphText('Oslo - 30546'),
+                      TemplateParagraphText('${registeredCar.place?.location} - ${registeredCar.place?.code}'),
                       Spacer(),
                       Align(
                         alignment: Alignment.centerRight,
-                        child: Text(registeredCar.createdAt,style: TextStyle(
+                        child: Text(registeredCar.createdAt,style: const TextStyle(
                           color: Colors.white
                         ),),
                       ),
@@ -80,7 +77,7 @@ class RegisteredCarInfo extends StatelessWidget {
                 Expanded(
                   child: Container(
                     alignment: Alignment.center,
-                    child: Icon(Icons.edit,color: Colors.white,size: 30,),
+                    child: const Icon(Icons.edit,color: Colors.white,size: 30,),
                   ),
                 ),
               ],

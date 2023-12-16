@@ -30,6 +30,7 @@ class PlaceProvider extends ChangeNotifier {
   logoutFromCurrentPlace(){
     selectedPlace = null;
     selectedPlaceLoginTime = null;
+    startTime = null;
   }
 
   clearErrors(){
@@ -64,5 +65,17 @@ class PlaceProvider extends ChangeNotifier {
     }).toList();
 
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    errorMessage = "";
+    errorState = false;
+    selectedPlace = null;
+    selectedPlaceLoginTime = null;
+    places.clear();
+    originalPlaces.clear();
+    startTime = null;
+    super.dispose();
   }
 }

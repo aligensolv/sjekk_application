@@ -319,7 +319,7 @@ class TemplateConfirmationDialog extends StatelessWidget {
                     Navigator.of(context).pop(false); // Close the dialog on button press
                   },
                   textColor: Colors.red,
-                  text: 'Cancel',
+                  text: 'CANCEL',
                 ),
                 TemplateTextButton(
                   onPressed: onConfirmation,

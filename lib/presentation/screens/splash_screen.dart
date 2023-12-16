@@ -2,8 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:sjekk_application/core/constants/app_images.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
-import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
-import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 import 'package:sjekk_application/presentation/wrappers/connectivity_wrapper.dart';
 
 

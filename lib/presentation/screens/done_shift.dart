@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sjekk_application/core/helpers/theme_helper.dart';
+import 'package:sjekk_application/core/helpers/sqflite_helper.dart';
 import 'package:sjekk_application/presentation/providers/shift_provider.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_dialog.dart';
@@ -22,7 +22,7 @@ class DoneShiftScreen extends StatelessWidget {
         backgroundColor: scaffoldColor,
         body: Container(
           color: Colors.grey.shade200, // Use a subtle background color
-          padding: EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -32,20 +32,20 @@ class DoneShiftScreen extends StatelessWidget {
                 size: 100.0,
                 color: textColor,
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
               Align(
                 alignment: Alignment.center,
                 child: TemplateHeaderText(
                   'Confirm Shift End',
                 ),
               ),
-              SizedBox(height: 32.0),
+              const SizedBox(height: 32.0),
               Center(child: Text('Start Date: ${format.format(
                 DateTime.parse(context.read<ShiftProvider>().shift!.startDate)
-              )}',style: TextStyle(
+              )}',style: const TextStyle(
                 fontSize: 18
               ),)),
-              SizedBox(height: 32.0),
+              const SizedBox(height: 32.0),
               DangerTemplateButton(
                 onPressed: () => _showConfirmationDialog(context),
                 text: 'END SHIFT',
@@ -63,7 +63,8 @@ class DoneShiftScreen extends StatelessWidget {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return TemplateConfirmationDialog(
-          onConfirmation: (){
+          onConfirmation: () async{
+            await DatabaseHelper.instance.clearTable('violations');
             Provider.of<AuthProvider>(context, listen: false).clearAuthenticationState();
             Navigator.of(context).pop(); // Close the dialog
           }, 

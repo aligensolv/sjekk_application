@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:path/path.dart';
-import 'package:sjekk_application/presentation/screens/scan_result_screen.dart';
+import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 
 class QrCodeScanner extends StatefulWidget {
-  static const String scanner = '/qrcode_scanner';
+  static const String router = '/qrcode_scanner';
   const QrCodeScanner({Key? key}) : super(key: key);
 
   @override
@@ -30,7 +29,10 @@ class _QrCodeScannerState extends State<QrCodeScanner> {
               
               onDetect: (barcode) async {
                 if (barcode.raw == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Null")));
+                  SnackbarUtils.showSnackbar(
+                    context, 
+                    'Could not find barcode'
+                  );
                                   mobileScannerController.dispose();
 
                 } else {

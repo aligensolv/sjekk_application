@@ -1,5 +1,7 @@
+import 'package:sjekk_application/core/utils/logger.dart';
+
 class Place{
-  final String id;
+  final String? id;
   final String location;
   final String policy;
   final String code;
@@ -7,7 +9,7 @@ class Place{
   Place({required this.location, required this.policy, required this.id, required this.code});
 
   factory Place.fromJson(Map data){
-    print(data);
+
     return Place(
         location: data['location'],
         policy: data['policy'],
@@ -20,7 +22,8 @@ class Place{
     return {
       'location': location,
       'policy': policy,
-      '_id': id,
+      'code': code,
+      '_id': id
     };
   }
 }

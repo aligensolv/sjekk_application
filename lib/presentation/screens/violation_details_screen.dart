@@ -2,12 +2,22 @@ import 'dart:async';
 
 import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:scanbot_sdk/scanbot_sdk.dart';
+import 'package:sjekk_application/core/utils/logger.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
+import 'package:sjekk_application/presentation/providers/place_provider.dart';
 import 'package:sjekk_application/presentation/providers/violation_details_provider.dart';
+import 'package:sjekk_application/presentation/providers/violations_provider.dart';
 import 'package:sjekk_application/presentation/screens/bottom_navigator_screen.dart';
+import 'package:sjekk_application/presentation/screens/choose_plate_input.dart';
+import 'package:sjekk_application/presentation/screens/select_brand_screen.dart';
+import 'package:sjekk_application/presentation/screens/select_car_type_screen.dart';
+import 'package:sjekk_application/presentation/screens/select_color_screen.dart';
 import 'package:sjekk_application/presentation/screens/select_rule_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
@@ -15,21 +25,27 @@ import 'package:sjekk_application/presentation/widgets/template/components/templ
 import 'package:sjekk_application/presentation/widgets/template/components/template_text_field.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
+import 'package:sjekk_application/presentation/widgets/template/widgets/rule_container.dart';
 
+import '../../core/utils/router_utils.dart';
 import '../../data/models/rule_model.dart';
 import '../../data/models/violation_model.dart';
+import '../../data/repositories/remote/violation_repository.dart';
 import '../providers/create_violation_provider.dart';
+import '../providers/rule_provider.dart';
 import '../widgets/template/components/template_dialog.dart';
 import '../widgets/template/components/template_image.dart';
+import '../widgets/template/components/template_option.dart';
+import '../widgets/template/components/template_options_menu.dart';
 import 'gallery_view.dart';
 import 'place_home.dart';
 
 import 'dart:math';
 class ViolationDetailsScreen extends StatefulWidget {
   static const String route = 'violation_details_screen';
-  final Violation violation;
+  // final Violation violation;
 
-  const ViolationDetailsScreen({Key? key, required this.violation}) : super(key: key);
+  const ViolationDetailsScreen({Key? key}) : super(key: key);
 
   @override
   State<ViolationDetailsScreen> createState() => _ViolationDetailsScreenState();
@@ -39,36 +55,60 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> with Si
 
   final TextEditingController innerController = TextEditingController();
   final TextEditingController outterController = TextEditingController();
+  
+  final TextEditingController descriptionController = TextEditingController();
+  
+  final TextEditingController plateController = TextEditingController();
 
     Future<bool> violationDetailsBack(bool stopDefaultButtonEvent, RouteInfo info) async{
       context.read<ViolationDetailsProvider>().cancelPrintTimer();
+      context.read<CreateViolationProvider>().clearAll();
       if(info.currentRoute(context)!.settings.name != ViolationDetailsScreen.route){
         return false;
       }
 
       return true;
     }
-  
+
+  void initializeRules() async{
+    await Provider.of<RuleProvider>(context, listen: false).fetchRules();
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      initializeRules();
+      pinfo(context.read<ViolationDetailsProvider>().violation.placeStartTime);
+      
       BackButtonInterceptor.add(violationDetailsBack);
-      DateTime parsedCreatedAt = DateTime.parse(widget.violation.createdAt);
-      final provider = Provider.of<ViolationDetailsProvider>(context,listen: false);
-        int maxTimePolicy = 0;
-        
-        if(provider.violation.rules.any((element) => element.timePolicy > 0)){
-          maxTimePolicy = provider.violation.rules.map((e){
-            print(e.timePolicy.toString());
-            return e.timePolicy;
-          }).reduce(max);
 
-                  print(maxTimePolicy);
-      if(DateTime.now().difference(parsedCreatedAt).inMinutes < maxTimePolicy){
-        Provider.of<ViolationDetailsProvider>(context, listen: false).updateTimePolicy();
+      context.read<ViolationDetailsProvider>().setSiteLoginTime(
+        // context.read<PlaceProvider>().startTime
+        DateTime.parse(
+          context.read<ViolationDetailsProvider>().violation.placeStartTime ?? ''
+        )
+      );
+      Provider.of<ViolationDetailsProvider>(context, listen: false).updateTimePolicy();
+
+      DateTime parsedCreatedAt = context.read<ViolationDetailsProvider>().siteLoginTime ?? DateTime.now();
+      pwarnings(context.read<ViolationDetailsProvider>().siteLoginTime);
+      pwarnings(DateTime.now().difference(parsedCreatedAt).inMinutes);
+      if(
+        context.read<ViolationDetailsProvider>().siteLoginTime != null
+        && DateTime.now().difference(parsedCreatedAt).inMinutes <= 6  
+      ){
+        context.read<ViolationDetailsProvider>().cancelPrintTimer();
+              context.read<ViolationDetailsProvider>().setSiteLoginTime(
+        // context.read<PlaceProvider>().startTime
+        DateTime.parse(
+          context.read<ViolationDetailsProvider>().violation.placeStartTime ?? ''
+        )
+      );
+
+      context.read<ViolationDetailsProvider>().maxTimePolicy = 6;
+        context.read<ViolationDetailsProvider>().createPrintTimer();
       }
-        }
     });
 
   final violationDetailsProvider = Provider.of<ViolationDetailsProvider>(context,listen: false);
@@ -81,6 +121,7 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> with Si
   @override
   void dispose() {
     BackButtonInterceptor.remove(violationDetailsBack);
+    descriptionController.dispose();
     innerController.dispose();
     outterController.dispose();
     super.dispose();
@@ -151,7 +192,7 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> with Si
                 alignment: Alignment.centerRight,
                 child: InfoTemplateButton(
                   onPressed: () async{
-                    await violationDetailsProvider.saveInnerComment(innerController.text);
+                    await violationDetailsProvider.changePaperComment(innerController.text);
                     await showDialog(
                       context: context, 
                       builder: (context){
@@ -176,7 +217,7 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> with Si
                 alignment: Alignment.centerRight,
                 child: InfoTemplateButton(
                   onPressed: () async{
-                    await violationDetailsProvider.saveOutterComment(outterController.text);
+                    await violationDetailsProvider.changeOutComment(outterController.text);
                     await showDialog(
                       context: context, 
                       builder: (context){
@@ -199,12 +240,14 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> with Si
 
 
 Widget CarInfoWidget() {
+  final detailsProvider = context.read<ViolationDetailsProvider>();
+  DateFormat formatter = DateFormat('HH:mm .dd.MM.yyyy');
   OverlayEntry? entry;
-    AnimationController controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
-  Animation<double> animation = CurvedAnimation(parent: controller, curve: Curves.easeIn);
 
 
-  return GestureDetector(
+  return Consumer<ViolationDetailsProvider>(
+    builder: (BuildContext context, ViolationDetailsProvider violationDetailsProvider, Widget? child) { 
+      return GestureDetector(
     onTap: (){
       if(entry != null){
         entry?.remove();
@@ -220,76 +263,247 @@ Widget CarInfoWidget() {
             Row(
               children: [
                 Expanded(
-                  child: TemplateContainerCard(
-                    title: widget.violation.plateInfo.plate,
-                    height: 40,
-    
-                    backgroundColor: widget.violation.is_car_registered ? Colors.blue : Colors.black54,
+                  child: GestureDetector(
+                    onTap: () async{
+                      await showDialog(
+                        context: context, 
+                        builder: (context){
+                          return AlertDialog(
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Enter Plate'),
+                                GestureDetector(
+                                  onTap: () async{
+                                    var config = LicensePlateScannerConfiguration(
+                                    topBarBackgroundColor: primaryColor,  
+                                    scanStrategy: LicensePlateScanStrategy.ML_BASED,
+                                    cameraModule: CameraModule.BACK,
+                                    
+                                    confirmationDialogAccentColor: Colors.green);
+                                    LicensePlateScanResult result = await ScanbotSdkUi.startLicensePlateScanner(config);
+                                    if(result.operationResult == OperationResult.CANCELED || result.operationResult == OperationResult.ERROR){
+                                      return Navigator.pop(context);
+                                    }
+
+                                    final createViolationProvider = context.read<CreateViolationProvider>();
+      
+                                    await createViolationProvider.getCarInfo(result.licensePlate); 
+                                    await createViolationProvider.getSystemCar(result.licensePlate);
+
+                                    await violationDetailsProvider.changePlateInfo(
+                                      createViolationProvider.plateInfo
+                                    );
+
+                                    await violationDetailsProvider.changeRegisterdCarData(
+                                      createViolationProvider.registeredCar
+                                    );
+
+                                    Navigator.pop(context);
+                                  },
+                                  child: Icon(Icons.camera,color: secondaryColor,),
+                                )
+                              ],
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.zero
+                            ),
+                            content: Container(
+                              width: 300,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SecondaryTemplateTextFieldWithIcon(
+                                    hintText: 'PLATE',
+                                    icon: Icons.search,
+                                    controller: plateController,
+                                  ),
+
+                                  12.h,
+
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: NormalTemplateButton(
+                                      text: 'OK',
+                                      onPressed: () async{
+                                        final createViolationProvider = context.read<CreateViolationProvider>();
+      
+                                        await createViolationProvider.getCarInfo(plateController.text); 
+                                        await createViolationProvider.getSystemCar(plateController.text);
+
+                                        await violationDetailsProvider.changePlateInfo(
+                                          createViolationProvider.plateInfo
+                                        );
+
+                                        await violationDetailsProvider.changeRegisterdCarData(
+                                          createViolationProvider.registeredCar
+                                        );
+
+                                        Navigator.pop(context);
+                                      },
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                      );
+                    },
+                    child: TemplateContainerCard(
+                      title: detailsProvider.violation.plateInfo.plate.isEmpty 
+                      ? 'N/A' : detailsProvider.violation.plateInfo.plate,
+                      height: 40,
+                      
+                      backgroundColor: detailsProvider.violation.is_car_registered ? Colors.blue : dangerColor, 
+                    ),
                   ),
                 ),
                 12.w,
-                Expanded(
-                  child: DangerTemplateButton(
-                    onPressed: () async{
-                      controller.forward();
-                      entry = OverlayEntry(
-                        builder: (context){
-                          return ScaleTransition(
-                            scale: animation,
-                            child: TemplateConfirmationDialog(
-                              onConfirmation: () async{
-                                await Provider.of<CreateViolationProvider>(context, listen: false).deleteViolation(widget.violation);
-                                Navigator.pop(context);
-                                if(Provider.of<CreateViolationProvider>(context, listen: false).errorState){
-                                Navigator.pop(context);
-                              
-                              SnackbarUtils.showSnackbar(
-                                context, 
-                                Provider.of<CreateViolationProvider>(context, listen: false).errorMessage
-                              );  
-                                                        }else{
-                            
-                                Navigator.of(context).popUntil(
-                                  (route) => route.settings.name == PlaceHome.route || route.settings.name == BottomScreenNavigator.route
-                                );
-                                                        }
-                              }, 
-                              onCancel: (){
-                                controller.reverse();
-                                entry?.remove();
-                              },
-                                title: 'Deleting VL', 
-                                message: 'Are you sure you want to delete this VL?'
-                              ),
+                DangerTemplateIconButton(
+                  onPressed: () async{
+                    entry = OverlayEntry(
+                      builder: (context){
+                        return TemplateConfirmationDialog(
+                          onConfirmation: () async{
+                            ViolationRepositoryImpl vil = ViolationRepositoryImpl();
+                            await vil.deleteViolation(
+                              context.read<ViolationDetailsProvider>().violation
+                            );
+
+                            entry?.remove();
+                            entry = null;
+
+                            Navigator.popUntil(
+                              context, 
+                              (route) => route.settings.name == PlaceHome.route
+                            );
+                          }, 
+                          onCancel: (){
+                            entry?.remove();
+                          },
+                            title: 'Deleting VL', 
+                            message: 'Are you sure you want to delete this VL?'
                           );
   }
-                      );
+                    );
   
-                      Overlay.of(context).insert(
-                        entry!
-                      );
-                    }, 
-                    text: 'DELETE'
-                  ),
+                    Overlay.of(context).insert(
+                      entry!
+                    );
+                  }
                 ),
               ],
             ),
             12.h,
-            _buildInfoContainer('Type', widget.violation.plateInfo.type, icon: Icons.category),
-            _buildInfoContainer('Status', widget.violation.status.toUpperCase(), icon: FontAwesome.exclamation),
-            _buildInfoContainer('Brand', widget.violation.plateInfo.brand,icon: FontAwesome.car),
-            _buildInfoContainer('Year', widget.violation.plateInfo.year, icon: Icons.calendar_month),
-            _buildInfoContainer('Description', widget.violation.plateInfo.description, icon: Icons.text_fields),
-            _buildInfoContainer('Created At', widget.violation.createdAt, icon: Icons.date_range),
+            _buildInfoContainer(
+              'TYPE', 
+              detailsProvider.violation.plateInfo.type,
+              icon: Icons.category,
+              editable: true,
+              route: SelectCarTypeScreen.route
+            ),
+            _buildInfoContainer('STATUS', detailsProvider.violation.status.toUpperCase(), icon: FontAwesome.exclamation),
+            _buildInfoContainer(
+              'BRAND', 
+              detailsProvider.violation.plateInfo.brand,icon: FontAwesome.car,
+              editable: true,
+              route: SelectCarBrandScreen.route
+            ),
+            GestureDetector(
+              onTap: () async{
+                await showDialog(
+                  context: context, 
+                  builder: (context){
+                    return AlertDialog(
+                      title: Text('Select Date'),
+                      content: Container(
+                        width: 300,
+                        height: 300,
+                        child: YearPicker(
+                        firstDate: DateTime(1990), 
+                        lastDate: DateTime(2240), 
+                        selectedDate: DateTime(2000), 
+                        onChanged: (year) async{
+                          await violationDetailsProvider.changeViolationYear(year.year.toString());
+                          Navigator.pop(context);
+                        }
+                        ),
+                      ),
+                    );
+                  }
+                );
+              },
+              child: _buildInfoContainer(
+                'YEAR', 
+                detailsProvider.violation.plateInfo.year, icon: Icons.calendar_month,
+                editable: true
+              )
+            ),
+            GestureDetector(
+              onTap: () async {
+                await showDialog(
+                  context: context, 
+                  builder: (context){
+                    return AlertDialog(
+                      title: Text('Enter Description'),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero
+                      ),
+                      content: Container(
+                        width: 300,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            NormalTemplateTextField(
+                              lines: 5,
+                              controller: descriptionController, 
+                              hintText: 'Description',
+                            ),
+                            12.h,
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: NormalTemplateButton(
+                                onPressed: () async{
+                                  await violationDetailsProvider.changeViolationDescription(
+                                    descriptionController.text
+                                  );
+                                  Navigator.pop(context);
+                                }, 
+                                text: 'OK'
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                );
+              },
+              child: _buildInfoContainer(
+                'DESCRIPTION',
+                detailsProvider.violation.plateInfo.description, 
+                icon: Icons.text_fields,
+                editable: true
+              )
+            ),
+            _buildInfoContainer(
+              'COLOR', 
+              detailsProvider.violation.plateInfo.color, icon: Icons.color_lens,
+              editable: true,
+              route: SelectCarColorScreen.route
+            ),
+            _buildInfoContainer('CREATED AT', formatter.format(DateTime.parse(detailsProvider.violation.createdAt)), icon: Icons.date_range),
       
-            if(widget.violation.is_car_registered && widget.violation.registeredCar != null)
+            if(detailsProvider.violation.is_car_registered && detailsProvider.violation.registeredCar != null)
             Column(
               children: [
-                TemplateHeadlineText('More Information'),
+                TemplateHeadlineText('MORE INFORMATION'),
                 12.h,
-                _buildInfoContainer('Regiseration type', widget.violation.registeredCar!.registerationType, icon: Icons.app_registration),
-                _buildInfoContainer('Fra', widget.violation.registeredCar!.startDate,icon: Icons.start),
-                _buildInfoContainer('Til', widget.violation.registeredCar!.endDate, icon: Icons.start)
+                _buildInfoContainer('RANK', detailsProvider.violation.registeredCar!.rank, icon: Icons.star),
+                _buildInfoContainer('REGISTERATION TYPE', detailsProvider.violation.registeredCar!.registerationType, icon: Icons.app_registration),
+                _buildInfoContainer('FRA', detailsProvider.violation.registeredCar!.startDate,icon: Icons.start),
+                _buildInfoContainer('TIL',  detailsProvider.violation.registeredCar!.endDate, icon: Icons.start)
               ],
             )
           ],
@@ -297,50 +511,77 @@ Widget CarInfoWidget() {
       ),
     ),
   );
+    },
+  );
 }
 
-Widget _buildInfoContainer(String title, String value, {IconData? icon = Icons.info_outline}) {
-  return Container(
-    margin: EdgeInsets.only(bottom: 12),
-    decoration: BoxDecoration(
-      color: Colors.black12,
-    ),
-    child: Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(12.0),
-          alignment: Alignment.center,
-          child: Icon(icon,size: 30,color: Colors.white,),
-          color: primaryColor,
-          height:60,
-          width: 60,
-        ),
-        12.w,
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                value,
-                style: TextStyle(fontSize: 16),
-              ),
-            ],
+Widget _buildInfoContainer(
+  String title, 
+  String? value, 
+  {IconData? icon = Icons.info_outline, bool editable = false, String? route}
+) {
+  return GestureDetector(
+    onTap: editable && route != null ? () async{
+      Navigator.of(context).pushNamed(
+        route
+      );
+    } : null,
+    child: Container(
+      margin: EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.black12,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(12.0),
+            alignment: Alignment.center,
+            child: Icon(icon,size: 30,color: Colors.white,),
+            color: primaryColor,
+            height:60,
+            width: 60,
           ),
-        ),
-      ],
+          12.w,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                6.h,
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  value ?? '',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+          if(editable)
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Icon(Icons.swap_horiz),
+            ),
+          )
+        ],
+      ),
     ),
   );
 }
 
+OverlayEntry? entry;
+
 Widget ImagesWidget(){
+  DateFormat format = DateFormat('HH:mm');
+
   return Consumer<ViolationDetailsProvider>(
     builder: (BuildContext context, ViolationDetailsProvider violationDetailsProvider, Widget? child) {  
       return Padding(
@@ -358,17 +599,90 @@ Widget ImagesWidget(){
                       
                         itemCount: violationDetailsProvider.violation.carImages.length,
                       itemBuilder: (context,index){
-                        return TemplateNetworkImageContainer(
-                          path: violationDetailsProvider.violation.carImages[index].path,
-                          onTap: (){
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => TemplateGalleryViewScreen(
-                                images: violationDetailsProvider.violation.carImages, 
-                                initialIndex: index,
-                                gallerySource: GallerySource.network,
-                              ))
-                            );
+                        return GestureDetector(
+                          onLongPress: () async{
+                            if(entry?.mounted ?? false){
+          entry?.remove();
+        }
+
+          entry = OverlayEntry(
+          builder: (context){
+            return TemplateOptionsMenu(
+            headerText: 'OPTIONS',
+            headerColor: Colors.black.withOpacity(0.7),
+            options: [
+                TemplateOption(
+                  text: 'DELETE', 
+                  icon: Icons.close, 
+                  backgroundColor: dangerColor,
+                  iconColor: Colors.white,
+                  textColor: Colors.white,
+                  onTap: () async{
+                    await violationDetailsProvider.removeImage(
+                      violationDetailsProvider.violation.carImages[index]
+                    );
+                    // ViolationRepositoryImpl vil = ViolationRepositoryImpl();
+                    // await vil.deleteViolation(violation);
+
+                    entry?.remove();
+                    entry = null;
+                  },
+                ),
+
+              TemplateOption(
+                text: 'BACK', 
+                icon: Icons.redo,
+                backgroundColor: Colors.black12,
+                iconColor: Colors.white,
+                textColor: Colors.white,
+                onTap: () async{
+                  entry?.remove();
+                  entry = null;
+                }
+              ),
+            ],
+          );
+          }
+        );
+
+
+      Overlay.of(context).insert(
+        entry!
+      );
                           },
+                          child: Stack(
+                            children: [
+                              TemplateFileImageContainer(
+                                path: violationDetailsProvider.violation.carImages[index].path,
+                                onTap: (){
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (context) => TemplateGalleryViewScreen(
+                                      images: violationDetailsProvider.violation.carImages, 
+                                      initialIndex: index,
+                                      gallerySource: GallerySource.file,
+                                    ))
+                                  );
+                                },
+                              ),
+                        
+                              Align(
+                                alignment: Alignment.bottomLeft,
+                                child: Container(
+                                  height: 40,
+                                  alignment: Alignment.center,
+                                  color: Colors.black54,
+                                  child: Text(
+                                    format.format(
+                                      DateTime.parse(violationDetailsProvider.violation.carImages[index].date)
+                                    ),
+                                    style: TextStyle(
+                                      color: Colors.white
+                                    ),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
                         );
                       },
                       
@@ -384,7 +698,7 @@ Widget ImagesWidget(){
             ImagePicker imagePicker = ImagePicker();
             XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
             if(file != null){
-              await violationDetailsProvider.addImage(file.path);
+              await violationDetailsProvider.storeImage(file.path);
             }
           },
         )
@@ -394,46 +708,110 @@ Widget ImagesWidget(){
     },
   );
 }
-
+OverlayEntry? rulesOverlay;
 Widget RulesWidget(){
   return Consumer<ViolationDetailsProvider>(
     builder: (BuildContext context, ViolationDetailsProvider violationDetailsProvider, Widget? child) { 
+      final ruleProvider = context.read<RuleProvider>();
+
           return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(12.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
               padding: EdgeInsets.zero,
-              itemCount: violationDetailsProvider.violation.rules.length,
+              // itemCount: violationDetailsProvider.violation.rules.length,
+              itemCount: ruleProvider.rules.length,
+              separatorBuilder: ((context, index) {
+                return 12.h;
+              }),
               itemBuilder: ((context, index) {
-                Rule rule = violationDetailsProvider.violation.rules[index];
+                Rule rule = ruleProvider.rules[index];
                 return GestureDetector(
-                  onTap: (){
-          
+                  onTap: () async{
+                    if(violationDetailsProvider.violation.rules.any((element) => element.id == rule.id)){
+                      await violationDetailsProvider.deattachRuleToViolation(rule);
+                    }else{
+                      await violationDetailsProvider.attachRuleToViolation(rule);
+                    }
                   },
-                  child: TemplateTileContainerCardWithExpandedIcon(
-                    height: 40,
-                    icon: Icons.euro_symbol,
-                    title: '${rule.name} (${rule.charge} \$)',
+                                            onLongPress: () async{
+                          if(rulesOverlay?.mounted ?? false){
+          rulesOverlay?.remove();
+        }
+
+          rulesOverlay = OverlayEntry(
+          builder: (context){
+            return TemplateOptionsMenu(
+            headerText: 'OPTIONS',
+            headerColor: Colors.black.withOpacity(0.7),
+            options: [
+                TemplateOption(
+                text: 'DELETE', 
+                icon: Icons.close, 
+                backgroundColor: dangerColor,
+                iconColor: Colors.white,
+                textColor: Colors.white,
+                onTap: () async{
+                  await violationDetailsProvider.deattachRuleToViolation(
+                    violationDetailsProvider.violation.rules[index]
+                  );
+                  // ViolationRepositoryImpl vil = ViolationRepositoryImpl();
+                  // await vil.deleteViolation(violation);
+
+                  rulesOverlay?.remove();
+                  rulesOverlay = null;
+                },
+                ),
+
+              TemplateOption(
+                text: 'BACK', 
+                icon: Icons.redo,
+                backgroundColor: Colors.black12,
+                iconColor: Colors.white,
+                textColor: Colors.white,
+                onTap: () async{
+                rulesOverlay?.remove();
+                rulesOverlay = null;
+                }
+              ),
+            ],
+          );
+          }
+        );
+
+
+      Overlay.of(context).insert(
+        rulesOverlay!
+      );
+                        },
+                  child: TemplateContainerCard(
+                    backgroundColor: violationDetailsProvider.violation.rules
+                      .any((element) => element.id == rule.id) ? primaryColor : Colors.black12,
+                      textColor: violationDetailsProvider.violation.rules
+                      .any((element) => element.id == rule.id) ? null : Colors.black,
+                    title: '${rule.name} (${rule.charge} kr)',
+                    // icon: Icons.euro,
                   ),
                 );
               }),
             ),
           ),
 
-          12.h,
-          NormalTemplateButton(
-            text: 'ADD RULE',
-            backgroundColor: secondaryColor,
-            width: double.infinity,
-            onPressed: (){
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => SelectRuleScreen())
-              );
-            },
-          )
+          // 12.h,
+          // NormalTemplateButton(
+          //   text: 'ADD RULE',
+          //   backgroundColor: violationDetailsProvider.violation.rules
+          //   .any((element) => element.id == r),
+          //   width: double.infinity,
+          //   onPressed: (){
+          //     Navigator.of(context).push(
+          //       MaterialPageRoute(builder: (context) => SelectRuleScreen())
+          //     );
+          //   },
+          // )
         ],
       ),
     );
@@ -447,12 +825,7 @@ Widget PrintWidget(){
 
   return Consumer<ViolationDetailsProvider>(
     builder: (BuildContext context, ViolationDetailsProvider violationDetailsProvider, Widget? child) { 
-      // DateTime parsedCreatedAt = DateTime.parse(violationDetailsProvider.violation.createdAt);
         final provider = Provider.of<ViolationDetailsProvider>(context,listen: false);
-        // int maxTimePolicy = 0;
-        // if(provider.violation.rules.any((element) => element.timePolicy > 0)){
-        //   maxTimePolicy = provider.violation.rules.map((e) => e.timePolicy).reduce(max);
-        // }
         return Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -475,12 +848,12 @@ Widget PrintWidget(){
                 child: ListView.separated(
                   padding: EdgeInsets.zero,
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: violationDetailsProvider.printOptions.length,
                   itemBuilder: (context,index){
                     return GestureDetector(
-                      onTap: (){
-                        violationDetailsProvider.setSelectedPrintOptionIndex(index);
+                      onTap: () async{
+                        await violationDetailsProvider.setSelectedPrintOptionIndex(index);
                       },
                       child: Container(
                                 width: media.width * 0.7,
@@ -505,9 +878,18 @@ Widget PrintWidget(){
               ),
 
               Opacity(
-                opacity: provider.isTimerActive ? 0.5 : 1,
+                opacity: provider.isTimerActive ? 0.5 : (
+                  provider.violation.carImages.isNotEmpty 
+                  && provider.violation.rules.isNotEmpty
+                  && provider.violation.plateInfo.brand != null ?
+                  1 : 0.5
+                ),
                 child: AbsorbPointer(
-                  absorbing: provider.isTimerActive,
+                  absorbing: provider.isTimerActive
+                  || provider.violation.carImages.isEmpty 
+                  || provider.violation.rules.isEmpty
+                  || provider.violation.plateInfo.brand == null 
+                ,
                   child: NormalTemplateButton(
                     width: double.infinity,
                     backgroundColor: secondaryColor,
@@ -516,11 +898,16 @@ Widget PrintWidget(){
                       ImagePicker imagePicker = ImagePicker();
                       XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
                       if(file != null){
-                        await violationDetailsProvider.addImage(file.path);
-                        await Provider.of<ViolationDetailsProvider>(context, listen: false).completeViolation();
+                        await violationDetailsProvider.storeImage(file.path);
                         SnackbarUtils.showSnackbar(context, 'VL is completed');
-                        Navigator.popUntil(context, (route) => route.settings.name == BottomScreenNavigator.route || route.settings.name == PlaceHome.route);
-                      }
+                        Navigator.popUntil(context, (route) =>  route.settings.name == PlaceHome.route || route.settings.name == BottomScreenNavigator.route);
+                        await Provider.of<ViolationDetailsProvider>(context, listen: false).uploadViolationToServer();
+
+                        ViolationRepositoryImpl vil = ViolationRepositoryImpl();
+                          await vil.deleteViolation(violationDetailsProvider.violation);
+                        }
+
+                        await context.read<CreateViolationProvider>().clearAll();
                   }, text: 'PRINT',),
                 ),
               ),
@@ -532,78 +919,3 @@ Widget PrintWidget(){
 }
 
 }
-
-/**
- Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 24.0,),
-              if(widget.violation.status == 'saved')
-              Align(
-                alignment: Alignment.centerRight,
-                child: NormalTemplateButton(
-                  text: 'Print And Complete',
-                  onPressed: (){
-
-                  },
-                ),
-              ),
-              SizedBox(height: 24,),
-              if(DateTime.now().difference(parsedCreatedAt).inMinutes < 6)
-              TemplateHeadlineText(
-                'Time passed: ${DateFormat('mm:ss').format(DateTime.fromMillisecondsSinceEpoch(DateTime.now().difference(parsedCreatedAt).inMilliseconds))}'
-              ),
-              
-              SizedBox(height: 12),
-              Text(
-                'Place: ${widget.violation.place.location}',
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 12),
-            Text(
-              'Policy: ${widget.violation.place.policy}',
-              style: TextStyle(fontSize: 16),
-            ),
-              SizedBox(height: 12),
-              Text(
-                'Rules:',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              ...widget.violation.rules.map((rule) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text('- ${rule.name} -> ${rule.charge}', style: TextStyle(fontSize: 16)),
-                  )),
-              SizedBox(height: 12),
-              Text(
-                'Car Images:',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 12),
-              // You can use a widget to display the car images, such as a ListView.builder.
-              GridView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 8.0,
-                  crossAxisSpacing: 8.0
-                ),
-                itemCount: widget.violation.carImages.length,
-                itemBuilder: (context, index) {
-                  return Image.network(widget.violation.carImages[index],fit: BoxFit.cover,);
-                },
-              ),
-            ],
-          ),
-        ),
-      )
- */

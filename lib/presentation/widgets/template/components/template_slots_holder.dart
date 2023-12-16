@@ -20,14 +20,14 @@ class TemplateSlotsHolder extends StatelessWidget {
       children: List.generate(length, (index){
         if(type == SlotType.rule){
           return Container(
-            margin: EdgeInsets.only(right: 4.0),
+            margin: const EdgeInsets.only(right: 4.0),
             alignment: Alignment.center,
-            child: TemplateIcon(Icons.horizontal_rule),
+            child: const TemplateIcon(Icons.horizontal_rule),
           );
         }
 
         return Container(
-          margin: EdgeInsets.only(right: 8.0),
+          margin: const EdgeInsets.only(right: 8.0),
           alignment: Alignment.center,
           width: 30,
           height: 30,
@@ -43,7 +43,7 @@ class TemplateSlotsHolder extends StatelessWidget {
     );
   }
 
-  TextStyle slotStyle = TextStyle(
+  TextStyle slotStyle = const TextStyle(
     fontSize: 50,
   );
 }

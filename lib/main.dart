@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
@@ -9,6 +8,8 @@ import 'package:scanbot_sdk/scanbot_sdk.dart';
 import 'package:sjekk_application/core/helpers/sqflite_helper.dart';
 import 'package:sjekk_application/presentation/providers/auth_provider.dart';
 import 'package:sjekk_application/presentation/providers/car_provider.dart';
+import 'package:sjekk_application/presentation/providers/car_type_provider.dart';
+import 'package:sjekk_application/presentation/providers/color_provider.dart';
 import 'package:sjekk_application/presentation/providers/create_violation_provider.dart';
 import 'package:sjekk_application/presentation/providers/keyboard_input_provider.dart';
 import 'package:sjekk_application/presentation/providers/printer_provider.dart';
@@ -19,7 +20,6 @@ import 'package:sjekk_application/presentation/providers/violations_provider.dar
 import 'package:sjekk_application/presentation/providers/connectivity_provider.dart';
 import 'package:sjekk_application/presentation/providers/login_provider.dart';
 import 'package:sjekk_application/presentation/providers/place_provider.dart';
-import 'package:sjekk_application/presentation/screens/splash_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/app_theme.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
@@ -27,21 +27,25 @@ import 'data/repositories/local/cache_repository_impl.dart';
 import 'presentation/providers/local_violation_details_provider.dart';
 import 'presentation/wrappers/connectivity_wrapper.dart';
 
+import './presentation/providers/brand_provider.dart';
+
+
+
 const SCANBOT_SDK_LICENSE_KEY =
-"oxP9Ixf22PAEz5jUGkyhOevAEBVX/l" +
-"UJGklY97nFvJHmuVKWmHf/W6DhOUBF" +
-"1N9/xHFgxmI7Px9f5pLBeHB7i6B85B" +
-"johd34/btPjHvW6LSe3gLEtvO4mzbp" +
-"9fcxvwDKNJkEfev5kIUE4klbdCevG1" +
-"7zXRCit6chvFKfaGmN0oNVGEIA1dL9" +
-"bQwAXb2pFRo4rq0vT5sd1mbEwblgqu" +
-"gkWBx0MV6PsD7wOG7DhaGUhYMcHF/z" +
-"hxDDFqMPBiONN2mCpEEPJkc4mownMh" +
-"1cAGaLqP7QadKR8PH0WR0pOmsV+Vp2" +
-"gYCkUBHRX2C718J/FOCySL8O9NpIJx" +
-"gMWvL7MrfWfw==\nU2NhbmJvdFNESw" +
-"pnZW5zb2x2My5uby5hcHAKMTcwMjQy" +
-"NTU5OQo4Mzg4NjA3CjE5\n";
+"PquqNQ2OlEUfTeh9eLycKSLjUJJRoQ" +
+"56T2GgChGDv8Qf1bmbzn0n+q1yCfqB" +
+"VPUmtRzSzL2oquKWbYDy30BNWTNfjb" +
+"WCjNxE+MCU0g+63TmFy4hErnb4ggv0" +
+"RCzG1o0hgDDoY7oed+RmUgDZoKcRHD" +
+"xSjULL1y1LGSMrYYdBUjHTCYge7WIq" +
+"U5gvdL1T3UlLXbclJjyXnwd+Ip8/Uo" +
+"EimgAjnnmNHVyMB2yu/yABkX3QmGbI" +
+"YpPqdTFU6nSgbcr7KhQ4EKOa1bjVPY" +
+"HrtgCPA98IRs9Yvh/ILSUZy3tBvntX" +
+"+y129JBLKrkvpp4HqFybs9ROLonq35" +
+"nwX61VPLeLWw==\nU2NhbmJvdFNESw" +
+"pnZW5zb2x2NS5uby5hcHAKMTcwMzM3" +
+"NTk5OQo4Mzg4NjA3CjE5\n";
 
 bool shouldInitWithEncryption = false;
 
@@ -93,6 +97,95 @@ Future<String> getDemoStorageBaseDirectory() async {
   return '${storageDirectory.path}/my-custom-storage';
 }
 
+// final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// late AndroidNotificationChannel channel;
+// late AndroidNotificationChannel customIssueChannel;
+// late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
+// bool isFlutterLocalNotificationsInitialized = false;
+
+
+// void onDidReceiveBackgroundNotificationResponse(NotificationResponse notificationResponse){
+//   if (notificationResponse.payload != null) {
+    
+//   }
+// }
+
+// @pragma('vm:entry-point')
+// void onDidReceiveNotificationResponse(NotificationResponse notificationResponse) {
+//   if (notificationResponse.payload != null) {
+    
+//   }
+// }
+
+// Future<void> setupFlutterNotifications() async {
+//   if (isFlutterLocalNotificationsInitialized) {
+//     return;
+//   }
+//   channel = const AndroidNotificationChannel(
+//       'Sjekk_Channel_1', // id
+//       'Sjekk Notifications', // title
+//       description:
+//           'This channel is used for important notifications.', // description
+//       importance: Importance.high,
+//       playSound: true,
+//     );
+
+//   flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+//   AndroidInitializationSettings androidInitializationSettings =
+//       AndroidInitializationSettings('@mipmap/ic_launcher');
+//   InitializationSettings initializationSettings = InitializationSettings(
+//     android: androidInitializationSettings,
+//   );
+
+
+//   flutterLocalNotificationsPlugin.initialize(
+//     initializationSettings,
+//     onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
+//     onDidReceiveBackgroundNotificationResponse: onDidReceiveBackgroundNotificationResponse
+//   );
+
+
+//   await flutterLocalNotificationsPlugin
+//       .resolvePlatformSpecificImplementation<
+//           AndroidFlutterLocalNotificationsPlugin>()
+//       ?.createNotificationChannel(channel);
+
+
+//   isFlutterLocalNotificationsInitialized = true;
+// }
+
+
+// Future<void> showFlutterNotification(String title, String body) async {
+//   if (!kIsWeb) {
+//     flutterLocalNotificationsPlugin.show(
+//       Random().nextInt(42949672),
+//       title,
+//       body,
+//       NotificationDetails(
+//         android: AndroidNotificationDetails(channel.id, channel.name,
+//             playSound: true,
+//             channelDescription: channel.description,
+//             icon: '@mipmap/ic_launcher' ,
+//             importance: Importance.high,
+//             priority: Priority.max),
+//       ),
+//     );
+//   }
+// }
+
+
+// Future<void> requestNotificationPermission() async {
+//   await Permission.notification.isDenied.then((value) async {
+//     if (value) {
+//       Permission.notification.request();
+//     }
+//   });
+// }
+
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await CacheRepositoryImpl.init();
@@ -100,6 +193,33 @@ Future<void> main() async {
   await ConnectivityProvider.instance.init();
   await DatabaseHelper.instance.initDatabase();
   await ShiftProvider.instance.init();
+
+  // await requestNotificationPermission();
+  // await setupFlutterNotifications();
+
+//   Socket socket = io('http://10.0.2.2:4000', 
+//     OptionBuilder()
+//       .setTransports(['websocket']) // for Flutter or Dart VM
+//       .disableAutoConnect()  // disable auto-connection
+//       .build()
+//   );
+
+
+// socket.onConnect((data){
+//   print('connected');
+// });
+// socket.onError((data){
+//   print(data);
+// });
+// socket.connect();
+// socket.onDisconnect((_) => print('disconnect'));
+
+// socket.on('notification', (data) async{
+
+//   pinfo('data is ${(data['notification']['title'], data['notification']['body'])}');
+//   // await showFlutterNotification(data['notification']['title'], data['notification']['body']);
+// });
+
 
   SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(statusBarColor: scaffoldColor));
@@ -184,11 +304,21 @@ class EntryPoint extends StatelessWidget {
         ChangeNotifierProvider<KeyboardInputProvider>(
           create: (context) => KeyboardInputProvider(),
         ),
+        ChangeNotifierProvider<ColorProvider>(
+          create: (context) => ColorProvider(),
+        ),
+        ChangeNotifierProvider<CarTypeProvider>(
+          create: (context) => CarTypeProvider(),
+        ),
+        ChangeNotifierProvider<BrandProvider>(
+          create: (context) => BrandProvider(),
+        ),
       ],
       child: MaterialApp(
               navigatorObservers: [ScanbotCamera.scanbotSdkRouteObserver],
         title: 'Sjekk',
         theme: appTheme,
+        // navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         home: ConnectivityWrapper(),
       ),

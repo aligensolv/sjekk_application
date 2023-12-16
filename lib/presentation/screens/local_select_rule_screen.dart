@@ -45,8 +45,9 @@ class _LocalSelectRuleScreenState extends State<LocalSelectRuleScreen> {
           itemBuilder: (context, index) {
             Rule rule = ruleProvider.rules[index];
             return TemplateContainerCard(
-              title: rule.name,
+              title: rule.name + ' (${rule.charge} kr)',
               backgroundColor: primaryColor,
+              alignment: Alignment.centerLeft,
               onTap: () async{
                 await Provider.of<LocalViolationDetailsProvider>(context, listen: false).pushRule(rule);
                 context.read<LocalViolationDetailsProvider>().updateTimePolicy();

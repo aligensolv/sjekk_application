@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sjekk_application/core/helpers/theme_helper.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/data/models/printer_model.dart';
 import 'package:sjekk_application/data/repositories/local/printer_repositories.dart';
@@ -26,11 +25,11 @@ class PrinterDetailsScreen extends StatelessWidget {
               TemplateHeadlineText(
                 'Printer Name: ${printer.name}',
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               TemplateHeadlineText(
                 'Printer Address: ${printer.address}',
               ),
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
               Row(
                 children: [
                   NormalTemplateButton(
@@ -39,7 +38,7 @@ class PrinterDetailsScreen extends StatelessWidget {
                     },
                     text: 'TEST',
                   ),
-                  SizedBox(width: 12.0,),
+                  const SizedBox(width: 12.0,),
                   DangerTemplateButton(
                     onPressed: () async{
                       await _showDeleteConfirmationDialog(context);

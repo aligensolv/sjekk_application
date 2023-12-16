@@ -19,42 +19,37 @@ class DatabaseHelper {
   Future<Database> initDatabase() async {
     // Get the path to the database
     String databasesPath = await getDatabasesPath();
-    String path = join(databasesPath, 'sjekk_v2.db');
+    String path = join(databasesPath, 'sjekk_kontrol_v1.db');
 
     // Open/create the database at a given path
-    return await openDatabase(path, version: 6, onCreate: _createTable, onUpgrade:(db, oldVersion, newVersion) async{
-          await db.execute('''
-            CREATE TABLE vl (
-              id INTEGER PRIMARY KEY,
-              type TEXT,
-              brand TEXT,
-              rules TEXT,
-              status TEXT,
-              created_at TEXT,
-              description TEXT,
-              plate TEXT,
-              year TEXT,
-              place TEXT,
-              car_images TEXT,
-              is_car_registered TEXT,
-              regisered_car_info TEXT,
-              paper_comment TEXT,
-              out_comment TEXT
-            )
-          ''');
-
-          print('violations table was created');      
-    },);
+    return await openDatabase(path, version: 1, onCreate: _createTable);
   }
 
   Future<void> _createTable(Database db, int version) async {
     // Create your tables here
     await db.execute('''
-      CREATE TABLE printer (
+        CREATE TABLE violations (
+        id INTEGER PRIMARY KEY,
+        plate_info TEXT,
+        rules TEXT,
+        status TEXT,
+        created_at TEXT,
+        place TEXT,
+        place_start_time TEXT NULLABLE,
+        car_images TEXT,
+        is_car_registered TEXT,
+        registered_car_info TEXT NULLABLE,
+        paper_comment TEXT,
+        out_comment TEXT
+      );
+''');
+
+    await db.execute('''
+      CREATE TABLE printers (
         id INTEGER PRIMARY KEY,
         name TEXT,
         address TEXT
-      )
+      );
     ''');
     // Add more tables as needed
   }
@@ -62,7 +57,7 @@ class DatabaseHelper {
   // Example: Insert data into the database
   Future<int> insertData(String tableName, Map<String, dynamic> data) async {
     Database db = await instance.database;
-    return await db.insert(tableName, data);
+    return await db.insert(tableName, data, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   // Example: Retrieve all data from a table

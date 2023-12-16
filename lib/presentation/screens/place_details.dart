@@ -10,12 +10,13 @@ import '../widgets/template/components/template_text.dart';
 
 class PlaceDetailsScreen extends StatelessWidget {
   static const String route = 'place_details';
-  final Place place;
+  // final Place place;
 
-  PlaceDetailsScreen({required this.place});
 
   @override
   Widget build(BuildContext context) {
+    final placeProvider = context.read<PlaceProvider>();
+
     final DateFormat dateFormat = DateFormat('HH:mm:ss');
     DateTime date = DateTime.now().toLocal();
     final currentDate = dateFormat.format(date);
@@ -32,10 +33,7 @@ class PlaceDetailsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 24.0,),
-              const Text('Policy',style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold
-              ),),
+              TemplateHeaderText('Location Policy', color: secondaryColor,),
               const SizedBox(height: 12,),
               TemplateParagraphText('Fra  $currentDate'),
               const SizedBox(height: 12,),
@@ -43,7 +41,7 @@ class PlaceDetailsScreen extends StatelessWidget {
               const Divider(thickness: 3,),
               const SizedBox(height: 12,),
               Text(
-                place.policy,
+                placeProvider.selectedPlace!.policy,
                 style: const TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 16),
@@ -51,16 +49,13 @@ class PlaceDetailsScreen extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: NormalTemplateButton(
                   onPressed: () {
-                    Provider.of<PlaceProvider>(context, listen: false).selectedPlace = place;
                     Provider.of<PlaceProvider>(context, listen: false).startTime = DateTime.now().toLocal();
                     if(context.mounted){
-
                       Navigator.pushNamed(context, PlaceHome.route);
-
                     }
                   },
 
-                  text: 'Agree',
+                  text: 'CONTINUE',
     
                 ),
               ),

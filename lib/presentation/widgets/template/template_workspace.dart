@@ -15,6 +15,7 @@ import 'package:sjekk_application/presentation/widgets/template/theme/colors_the
 import './extensions/sizedbox_extension.dart';
 
 class TemplateWorkspace extends StatefulWidget {
+  static const String route = 'workspace_template';
 
   @override
   State<TemplateWorkspace> createState() => _TemplateWorkspaceState();
@@ -64,7 +65,7 @@ class _TemplateWorkspaceState extends State<TemplateWorkspace> {
           title: 'METHOD CHANNEL GET BATTERY LEVEL',
           onTap: () async{
             final result = await _channel.invokeMethod('get_battery_status');
-            print(result);
+            SnackbarUtils.showSnackbar(context, result.toString());
           },
         ),
         12.h,
@@ -72,7 +73,15 @@ class _TemplateWorkspaceState extends State<TemplateWorkspace> {
           title: 'METHOD CHANNEL OPEN CAMERA',
           onTap: () async{
             final result = await _channel.invokeMethod('open_camera');
-            print(result);
+            SnackbarUtils.showSnackbar(context, result);
+          },
+        ),
+        12.h,
+        TemplateContainerCard(
+          title: 'METHOD CHANNEL GET UNIQUE ID',
+          onTap: () async{
+            final result = await _channel.invokeMethod('get_unique_id');
+            SnackbarUtils.showSnackbar(context, result);
           },
         ),
       ],
@@ -292,12 +301,12 @@ class _TemplateWorkspaceState extends State<TemplateWorkspace> {
             NormalTemplateButton(
               onPressed: (){
                 final List<CarImage> images = [
-                  CarImage(path: 'assets/cars/BMW.png'),
-                  CarImage(path: 'assets/cars/Peugeot.png'),
-                  CarImage(path: 'assets/cars/Porsche.png'),
-                  CarImage(path: 'assets/cars/Toyota.png'),
-                  CarImage(path: 'assets/images/gensolv.png'),
-                  CarImage(path: 'assets/images/kontroll.png'),
+                  // CarImage(path: 'assets/cars/BMW.png'),
+                  // CarImage(path: 'assets/cars/Peugeot.png'),
+                  // CarImage(path: 'assets/cars/Porsche.png'),
+                  // CarImage(path: 'assets/cars/Toyota.png'),
+                  // CarImage(path: 'assets/images/gensolv.png'),
+                  // CarImage(path: 'assets/images/kontroll.png'),
                 ];
 
                 Navigator.of(context).push(

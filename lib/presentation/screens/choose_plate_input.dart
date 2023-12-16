@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:scanbot_sdk/scanbot_sdk.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
+import 'package:sjekk_application/core/utils/sound_utils.dart';
 import 'package:sjekk_application/presentation/screens/plate_keyboard_input.dart';
+import 'package:sjekk_application/presentation/screens/plate_result_info.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
@@ -51,18 +53,13 @@ class ChoosePlateInputScreen extends StatelessWidget {
       
                     await createViolationProvider.getCarInfo(result.licensePlate); 
                     await createViolationProvider.getSystemCar(result.licensePlate);
+                    await createViolationProvider.setExistingSavedViolation(result.licensePlate);
                     
-                    if(createViolationProvider.plateInfo != null){
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const PlateResultController()
-                        )
-                      );
+                    if(createViolationProvider.registeredCar != null){
+                      await playCorrectSound();
+                      Navigator.of(context).pushNamed(PlateResultInfo.route);
                     }else{
-                      SnackbarUtils.showSnackbar(
-                        context, 
-                        'Could not found this plate number'
-                      );
+                      await playWrongSound();
                     }
                 }),
               ),
@@ -73,9 +70,7 @@ class ChoosePlateInputScreen extends StatelessWidget {
                   // widthFactor: 0.8,
                   title: 'KEYBOARD',backgroundColor: secondaryColor, icon: Icons.keyboard, onTap: () {
                     // Navigator.pushNamed(context, CompletedViolationsScreen.route);
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const PlateKeyboardInputScreen())
-                    );
+                    Navigator.of(context).pushNamed(PlateKeyboardInputScreen.router);
                 }),
               )
                 ],

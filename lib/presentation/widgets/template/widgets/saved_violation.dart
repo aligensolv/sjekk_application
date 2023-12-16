@@ -4,7 +4,6 @@ import 'package:sjekk_application/core/constants/app_images.dart';
 import 'package:sjekk_application/data/models/violation_model.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
-import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
 import '../../../providers/violation_details_provider.dart';
 import '../../../screens/violation_details_screen.dart';
@@ -19,12 +18,12 @@ class SavedViolationWidget extends StatelessWidget {
       onTap: (){
         Provider.of<ViolationDetailsProvider>(context, listen: false).setViolation(violation);
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => ViolationDetailsScreen(violation: violation))
+          MaterialPageRoute(builder: (context) => ViolationDetailsScreen())
         );
       },
       child: Container(
         color: Colors.black12,
-                padding: EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(8.0),
 
         child: Column(
           children: [
@@ -33,7 +32,7 @@ class SavedViolationWidget extends StatelessWidget {
                 Container(
                   width: 60,
                   height: 60,
-                          padding: EdgeInsets.all(20.0),
+                          padding: const EdgeInsets.all(20.0),
 
                   decoration: BoxDecoration(
                     image: DecorationImage(
@@ -44,7 +43,7 @@ class SavedViolationWidget extends StatelessWidget {
                 ),
                 Expanded(
                   child: Container(
-                            padding: EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(8.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

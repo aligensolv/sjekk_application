@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.provider.Settings.Secure
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
 import android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION
@@ -19,6 +20,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.provider.MediaStore
+import android.provider.Settings
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import io.flutter.embedding.android.FlutterActivity
@@ -55,6 +57,9 @@ class MainActivity: FlutterActivity() {
                 } else {
                     result.error("UNAVAILABLE", "Battery level not available.", null)
                 }
+            }else if(call.method == "get_unique_id"){
+                val deviceUniqueId = getAndroidId();
+                result.success(deviceUniqueId)
             }else if(call.method == "open_camera") {
                 openCamera()
                 result.success("Camera opened successfully")
@@ -62,6 +67,11 @@ class MainActivity: FlutterActivity() {
                 result.notImplemented()
             }
         }
+    }
+
+    private fun getAndroidId(): String {
+        val contentResolver = applicationContext.contentResolver
+        return Secure.getString(contentResolver, Secure.ANDROID_ID) ?: ""
     }
 
     private fun openCamera() {

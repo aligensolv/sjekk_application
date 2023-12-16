@@ -33,10 +33,7 @@ class _MoreScreenState extends State<MoreScreen> {
                       icon: Icons.qr_code_scanner,
                       title: 'SCAN QR',
                       onTap: () {
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (context) {
-                          return const QrCodeScanner();
-                        }));
+                        Navigator.pushNamed(context, QrCodeScanner.router);
                       },
                     ),
                     12.h,

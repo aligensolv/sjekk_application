@@ -6,7 +6,7 @@ class PrinterRepository implements IPrinterRepository{
   @override
   Future<void> createPriner(Printer printer) async{
     try{
-      await DatabaseHelper.instance.insertData('printer', printer.toJson());
+      await DatabaseHelper.instance.insertData('printers', printer.toJson());
       return;
     }catch(error){
       rethrow;
@@ -16,7 +16,7 @@ class PrinterRepository implements IPrinterRepository{
   @override
   Future<bool> deletePrinter(int id) async{
     try{
-      return await DatabaseHelper.instance.removeDataById('printer', id) > 0;
+      return await DatabaseHelper.instance.removeDataById('printers', id) > 0;
     }catch(error){
       rethrow;
     }
@@ -25,7 +25,7 @@ class PrinterRepository implements IPrinterRepository{
   @override
   Future<List<Printer>> getAllPrinters() async{
     try{
-      List data = await DatabaseHelper.instance.getAllData('printer');
+      List data = await DatabaseHelper.instance.getAllData('printers');
       List<Printer> printers = data.map((e){
         return Printer.fromJson(e);
       }).toList();
@@ -39,7 +39,7 @@ class PrinterRepository implements IPrinterRepository{
   @override
   Future<Printer> getPrinter(int id) async{
     try{
-      Map data = await DatabaseHelper.instance.getPrinter('printer', id);
+      Map data = await DatabaseHelper.instance.getPrinter('printers', id);
       Printer printer = Printer.fromJson(data);
       return printer;
     }catch(error){
@@ -50,7 +50,7 @@ class PrinterRepository implements IPrinterRepository{
   @override
   Future<bool> updatePrinter(int id, Map<String,dynamic> data) async{
     try{
-      return await DatabaseHelper.instance.updateData('printer', id, data) > 0;
+      return await DatabaseHelper.instance.updateData('printers', id, data) > 0;
     }catch(error){
       rethrow;
     }
