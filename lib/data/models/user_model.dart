@@ -13,4 +13,19 @@ class User {
       token: json['token'],
     );
   }
+
+  factory User.fromTicket(Map json){
+    return User(
+      identifier: json['user_identifier'],
+      username: json['name'],
+    );
+  }
+
+  Map<String,String> toJson(){
+    return {
+      'identifier': identifier ?? '',
+      'username': username ?? '',
+      'token': token ?? '',
+    };
+  }
 }

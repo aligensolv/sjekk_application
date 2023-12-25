@@ -16,10 +16,20 @@ class ViolationProvider extends ChangeNotifier{
     errorMessage = "";
   }
 
-  // Future completeViolation(Violation violation) async{
-  //   ViolationRepositoryImpl violationRepositoryImpl = ViolationRepositoryImpl();
-  //   await violationRepositoryImpl.completeViolation(violation);
-  // }
+  clearAll(){
+    clearErrors();
+    loadingState = false;
+    currentPlaceCompletedViolations.clear();
+    currentPlaceSavedViolations.clear();
+    completedViolations.clear();
+    savedViolations.clear();
+  }
+
+  @override
+  dispose(){
+    clearAll();
+    super.dispose();
+  }
 
   fetchCompletedViolations() async{
     try{

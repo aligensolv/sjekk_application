@@ -2,7 +2,7 @@
 class CarImage{
   final String path;
   final String date;
-  int? id;
+  dynamic id;
 
   CarImage({required this.path, required this.date, this.id});
 
@@ -17,7 +17,7 @@ class CarImage{
     return CarImage(
       path: data['path'],
       date: data['date'],
-      id: data['id'],
+      id: data['_id'],
     );
   }
 
@@ -25,7 +25,7 @@ class CarImage{
     return {
       'path': path,
       'date': date,
-      'id': id
+      '_id': id
     };
   }
 }

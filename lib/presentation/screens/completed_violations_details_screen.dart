@@ -201,6 +201,8 @@ Widget _buildInfoContainer(String title, String? value, {IconData? icon = Icons.
 }
 
 Widget ImagesWidget(){
+      DateFormat format = DateFormat('HH:mm');
+
   return Consumer<ViolationDetailsProvider>(
     builder: (BuildContext context, ViolationDetailsProvider violationDetailsProvider, Widget? child) {  
       return Padding(
@@ -218,17 +220,38 @@ Widget ImagesWidget(){
                       
                         itemCount: violationDetailsProvider.violation.carImages.length,
                       itemBuilder: (context,index){
-                        return TemplateNetworkImageContainer(
-                          path: violationDetailsProvider.violation.carImages[index].path,
-                          onTap: (){
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => TemplateGalleryViewScreen(
-                                images: violationDetailsProvider.violation.carImages, 
-                                initialIndex: index,
-                                gallerySource: GallerySource.network,
-                              ))
-                            );
-                          },
+                        return Stack(
+                          children: [
+                            TemplateNetworkImageContainer(
+                              path: violationDetailsProvider.violation.carImages[index].path,
+                              onTap: (){
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => TemplateGalleryViewScreen(
+                                    images: violationDetailsProvider.violation.carImages, 
+                                    initialIndex: index,
+                                    gallerySource: GallerySource.network,
+                                  ))
+                                );
+                              },
+                            ),
+
+                            Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Container(
+                              height: 40,
+                              alignment: Alignment.center,
+                              color: Colors.black54,
+                              child: Text(
+                                format.format(
+                                  DateTime.parse(widget.violation.carImages[index].date)
+                                ),
+                                style: TextStyle(
+                                  color: Colors.white
+                                ),
+                              ),
+                            ),
+                          )
+                          ],
                         );
                       },
                       
@@ -287,19 +310,17 @@ Widget RulesWidget(){
 Widget PrintWidget(){
   return Padding(
     padding: EdgeInsets.all(12.0),
-    child: Column(
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: widget.violation.printPaper != null ? 
-                CachedNetworkImageProvider(widget.violation.printPaper!) as ImageProvider: const AssetImage(AppImages.gensolv)
-              )
-            ),
-          ),
-        )
-      ],
+    child: SingleChildScrollView(
+      child: Container(
+        height: 2200,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: widget.violation.printPaper != null ? 
+            CachedNetworkImageProvider(widget.violation.printPaper!) as ImageProvider: const AssetImage(AppImages.gensolv),
+            fit: BoxFit.contain
+          )
+        ),
+      ),
     ),
   );
 }

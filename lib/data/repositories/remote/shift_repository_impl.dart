@@ -13,16 +13,22 @@ class ShiftRepository implements IShiftRepository{
         try{
       final uri = Uri.parse('$baseUrl/shifts/$id/end');
       String? token = await CacheRepositoryImpl.instance.get('token');
+      
+      final cacheRepository = CacheRepositoryImpl.instance;
+      String encoded = await cacheRepository.get('logins') ?? '[]';
 
       final response = await http.post(
         uri,
         headers: BuildHeaders().supportJson().add('token',token.toString()).finish(),
+        body: jsonEncode({
+          'logins': encoded
+        })
       );
 
       if(response.statusCode == 200){
-        final cacheRepository = CacheRepositoryImpl.instance;
         await cacheRepository.remove('shift_id');
         await cacheRepository.remove('shift_start_date');
+        await cacheRepository.remove('logins');
         return;
       }else{
         Map decoded = jsonDecode(response.body);
@@ -49,6 +55,7 @@ class ShiftRepository implements IShiftRepository{
         final cacheRepository = CacheRepositoryImpl.instance;
         await cacheRepository.set('shift_id', shift.id);
         await cacheRepository.set('shift_start_date', shift.startDate);
+        await cacheRepository.set('logins', jsonEncode([]));
         return shift;
       }else{
         Map decoded = jsonDecode(response.body);

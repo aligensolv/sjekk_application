@@ -9,7 +9,10 @@ import 'package:sjekk_application/presentation/widgets/template/components/templ
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
+import 'package:sjekk_application/presentation/widgets/template/widgets/empty_data_container.dart';
 import '../../data/models/violation_model.dart';
+import '../widgets/template/components/template_image.dart';
+import 'gallery_view.dart';
 
 class CompletedViolationBriefInformation extends StatefulWidget {
   static const String route = "completed_violations_summary";
@@ -27,7 +30,7 @@ class _CompletedViolationBriefInformationState extends State<CompletedViolationB
   Widget build(BuildContext context) {
     return DefaultTabController(
       initialIndex: 0,
-      length: 2,
+      length: 3,
       child: Scaffold(
         body: Column(
           children: [
@@ -35,19 +38,22 @@ class _CompletedViolationBriefInformationState extends State<CompletedViolationB
             const TabBar(
             tabs: <Widget>[
               Tab(
-                icon: Icon(Icons.info_outline),
+                icon: Icon(FontAwesome.edit),
               ),
               Tab(
                 icon: Icon(Icons.print),
               ),
+              Tab(
+                icon: Icon(Icons.camera),
+              ),
             ],
           ),
-          12.h,
             Expanded(
               child: TabBarView(
                 children: [
                   CarInfoWidget(),
                   PrintWidget(),
+                  ImagesWidget()
                 ],
               ),
             ),
@@ -58,76 +64,184 @@ class _CompletedViolationBriefInformationState extends State<CompletedViolationB
   }
 
 
-Widget CarInfoWidget() {
-  DateFormat formatter = DateFormat('HH:mm .dd.MM.yyyy');
+Widget ImagesWidget(){
+    DateFormat format = DateFormat('HH:mm');
+
   return Padding(
     padding: const EdgeInsets.all(12.0),
-    child: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TemplateContainerCard(
-            title: widget.violation.plateInfo.plate,
-            backgroundColor: widget.violation.is_car_registered ? Colors.blue : dangerColor,
-          ),
-          12.h,
-            _buildInfoContainer('TYPE', widget.violation.plateInfo.type, icon: Icons.category),
-            _buildInfoContainer('STATUS', widget.violation.status.toUpperCase(), icon: FontAwesome.exclamation),
-            _buildInfoContainer('BRAND', widget.violation.plateInfo.brand,icon: FontAwesome.car),
-            _buildInfoContainer('YEAR', widget.violation.plateInfo.year, icon: Icons.calendar_month),
-            _buildInfoContainer('DESCRIPTION', widget.violation.plateInfo.description, icon: Icons.text_fields),
-            _buildInfoContainer('COLOR', widget.violation.plateInfo.color, icon: Icons.color_lens),
-            _buildInfoContainer('CREATED AT', formatter.format(DateTime.parse(widget.violation.createdAt)), icon: Icons.date_range),
-    
-          if(widget.violation.is_car_registered && widget.violation.registeredCar != null)
-          Column(
-            children: [
-              TemplateHeadlineText('MORE INFORMATION'),
-              12.h,
-                _buildInfoContainer('RANK', widget.violation.registeredCar!.rank.toString().toUpperCase(), icon: Icons.star),
-                _buildInfoContainer('REGISTERATION TYPE', widget.violation.registeredCar!.registerationType, icon: Icons.app_registration),
-                _buildInfoContainer('FRA', widget.violation.registeredCar!.startDate,icon: Icons.start),
-                _buildInfoContainer('TIL', widget.violation.registeredCar!.endDate, icon: Icons.start)
-            ],
-          )
-        ],
-      ),
+    child: Column(
+  children: [
+    Expanded(
+      child: GridView.builder(
+        padding: EdgeInsets.zero,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 8.0,
+                    crossAxisSpacing: 8.0
+                  ),
+                  
+                    itemCount: widget.violation.carImages.length,
+                  itemBuilder: (context,index){
+                    return Stack(
+                      children: [
+                        TemplateNetworkImageContainer(
+                          path: widget.violation.carImages[index].path,
+                          onTap: (){
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) => TemplateGalleryViewScreen(
+                                images: widget.violation.carImages, 
+                                initialIndex: index,
+                                gallerySource: GallerySource.network,
+                              ))
+                            );
+                          },
+                        ),
+
+                        Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Container(
+                              height: 40,
+                              alignment: Alignment.center,
+                              color: Colors.black54,
+                              child: Text(
+                                format.format(
+                                  DateTime.parse(widget.violation.carImages[index].date)
+                                ),
+                                style: TextStyle(
+                                  color: Colors.white
+                                ),
+                              ),
+                            ),
+                          )
+                      ],
+                    );
+                  },
+                  
+                ),
+    ),
+  ],
     ),
   );
 }
 
-Widget _buildInfoContainer(String title, String? value, {IconData? icon = Icons.info_outline}) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    decoration: const BoxDecoration(
-      color: Colors.black12,
-    ),
-    child: Row(
+Widget CarInfoWidget() {
+  return Padding(
+    padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 12.0),
+    child: ListView(
       children: [
-        Container(
-          padding: const EdgeInsets.all(12.0),
-          alignment: Alignment.center,
-          child: Icon(icon,size: 30,color: Colors.white,),
-          color: primaryColor,
-          height:60,
-          width: 60,
-        ),
-        12.w,
-        Expanded(
+        ViolationMainData(),
+        12.h,
+        ViolationRegisteredRules(),
+        12.h,
+        CarPlateInfo(),
+        12.h,
+        ViolationPlaceInfo()
+      ],
+    ),
+  );
+}
+
+Widget TitleText(String text){
+  return TemplateHeadlineText(text,size: 18,color: primaryColor);
+}
+
+Widget InfoBlock({
+  required String titleText,
+  required String blockValue
+}){
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+                    TitleText(titleText),
+              2.h,
+              TemplateParagraphText(blockValue),
+              8.h
+    ],
+  );
+}
+
+Widget ViolationPlaceInfo(){
+  return Container(
+    padding: EdgeInsets.all(8.0),
+    decoration: BoxDecoration(
+      color: Colors.black12
+    ),
+
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TemplateHeadlineText('Stedsinfo'),
+        12.h,
+        Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              InfoBlock(
+                titleText: 'Anlegg', 
+                blockValue: 'Olaf Helsetsvie 5'
+              ),
+            ],
+          ),
+        )
+      ],
+    ),
+  );
+}
+
+Widget CarPlateInfo(){
+  return Container(
+    padding: EdgeInsets.all(8.0),
+    decoration: BoxDecoration(
+      color: Colors.black12
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TemplateHeadlineText('Kjoretoy Info'),
+        12.h,
+        Padding(
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: InfoBlock(
+                      titleText: 'Reg.nr', 
+                      blockValue: widget.violation.plateInfo.plate
+                    ),
+                  ),
+                  Expanded(
+                    child: InfoBlock(
+                      titleText: 'Land', 
+                      blockValue: 'Norge'
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 8),
-              Text(
-                value ?? '',
-                style: TextStyle(fontSize: 16),
+              12.h,
+              Row(
+                children: [
+                  Expanded(
+                    child: InfoBlock(
+                      titleText: 'Merke', 
+                      blockValue: widget.violation.plateInfo.brand ?? 'N/A'
+                    ),
+                  ),
+                  Expanded(
+                    child: InfoBlock(
+                      titleText: 'Farge', 
+                      blockValue: 'Sfart'
+                    ),
+                  ),
+                ],
+        
+              ),
+              12.h,
+              InfoBlock(
+                titleText: 'Type', 
+                blockValue: widget.violation.plateInfo.type ?? 'N/A'
               ),
             ],
           ),
@@ -137,25 +251,131 @@ Widget _buildInfoContainer(String title, String? value, {IconData? icon = Icons.
   );
 }
 
+Widget ViolationRegisteredRules(){
+  return Container(
+    padding: EdgeInsets.all(8.0),
+    decoration: BoxDecoration(
+      color: Colors.black12
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TemplateHeadlineText('Overtredelse'),
+        12.h,
+        Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              ...widget.violation.rules.map((e){
+                return InfoBlock(
+                titleText: 'Overtredelse 1', 
+                blockValue: e.name
+              );
+              })
+            ],
+          ),
+        )
+      ],
+    ),
+  );
+}
+
+Widget ViolationMainData(){
+  return Container(
+    padding: EdgeInsets.all(8.0),
+    decoration: BoxDecoration(
+      color: Colors.black12
+    ),
+
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TemplateHeadlineText('Kontrollsanksjon'),
+        12.h,
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              InfoBlock(
+                titleText: 'Ticket Id', 
+                blockValue: widget.violation.ticketNumber ?? 'N/A'
+              ),
+              InfoBlock(
+                titleText: 'KID number',  
+                blockValue: '00666465466'
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: InfoBlock(
+                      titleText: 'Fra', 
+                      blockValue: '19.12.23 19:01'
+                    ),
+                  ),
+                  Expanded(
+                    child: InfoBlock(
+                      titleText: 'Til', 
+                      blockValue: '19.12.23 19:11'
+                    ),
+                  ),
+                ],
+              ),
+
+              InfoBlock(
+                titleText: 'Belop', 
+                blockValue: widget.violation.rules.map((e){
+                  return e.charge;
+                }).reduce((value, element) => value + element).toString() + ' Kr'
+              ),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: InfoBlock(
+                      titleText: 'Betalingsfrist', 
+                      blockValue: '09.01.24'
+                    ),
+                  ),
+                  Expanded(
+                    child: InfoBlock(
+                      titleText: 'Levering', 
+                      blockValue: 'Kjoretoy'
+                    ),
+                  ),
+                ],
+              ),
+
+              InfoBlock(
+                titleText: 'Registered by', 
+                blockValue: widget.violation.user.identifier ?? 'N/A'
+              )
+            ],
+          ),
+        )
+      ],
+    ),
+  );
+}
 
 
 
 Widget PrintWidget(){
-  return Padding(
-    padding: EdgeInsets.all(12.0),
-    child: Column(
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: widget.violation.printPaper != null ? 
-                CachedNetworkImageProvider(widget.violation.printPaper!) as ImageProvider: const AssetImage(AppImages.gensolv)
-              )
-            ),
+  return SingleChildScrollView(
+    child: Container(
+      height: 2200,
+      padding: EdgeInsets.all(12.0),
+      child: widget.violation.printPaper != null ? Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: CachedNetworkImageProvider(widget.violation.printPaper!),
+            fit: BoxFit.contain,
+            // filterQuality: FilterQuality.high
           ),
-        )
-      ],
+        ),
+      ) : EmptyDataContainer(
+        text: 'No Image',
+      ),
     ),
   );
 }

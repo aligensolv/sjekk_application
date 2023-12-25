@@ -6,8 +6,10 @@ import 'package:sjekk_application/data/models/place_model.dart';
 import 'package:sjekk_application/data/models/plate_info_model.dart';
 import 'package:sjekk_application/data/models/registered_car_model.dart';
 import 'package:sjekk_application/data/models/rule_model.dart';
+import 'package:sjekk_application/data/models/user_model.dart';
 
 class Violation{
+  User user;
   List<Rule> rules;
   String status;
   String createdAt;
@@ -21,6 +23,7 @@ class Violation{
   String paperComment;
   String outComment;
   String? printPaper;
+  String? ticketNumber;
   String? placeStartTime;
 
   Violation({
@@ -29,6 +32,7 @@ class Violation{
     required this.createdAt, 
     this.id,
     this.printPaper,
+    this.ticketNumber,
     this.placeStartTime,
     required this.plateInfo,
     required this.carImages,
@@ -37,10 +41,12 @@ class Violation{
     required this.outComment,
     required this.is_car_registered,
     required this.registeredCar,
-    required this.completedAt
+    required this.completedAt,
+    required this.user
   });
 
   factory Violation.fromJson(Map data){
+    pinfo(data['publisher_identifier']);
     Violation violation = Violation(
       rules: (data['rules'] as List<dynamic>).map((e){
         return Rule.fromJson(e);
@@ -49,14 +55,16 @@ class Violation{
       createdAt: data['created_at'],
       completedAt: data['completed_at'],
       id: data['_id'],
+      user: User.fromTicket(data['publisher_identifier']),
       plateInfo: PlateInfo.fromJson(data['plate_info']),
       carImages: (data['images'] as List<dynamic>).map((e){
-        return CarImage.fromString(e);
+        return CarImage.fromJson(e);
       }).toList(),
       place: Place.fromJson(data['place']),
       paperComment: data['paper_comment'],
       outComment: data['out_comment'],
       printPaper: data['print_paper'],
+      ticketNumber: data['ticket_number'],
       is_car_registered: data['is_car_registered'],
       registeredCar: data['registered_car_info'] != null ? RegisteredCar.fromJson(data['registered_car_info']) : null,
     );
@@ -65,11 +73,17 @@ class Violation{
   }
 
     factory Violation.fromEncodedJson(Map data){
+      pinfo(data);
+      pinfo(data['publisher_identifier']);
+
     Violation violation = Violation(
       rules: (jsonDecode(data['rules']) as List<dynamic>).map((e){
         return Rule.fromJson(e);
       }).toList(),
       status: data['status'],
+      user: User.fromTicket(
+        jsonDecode(data['publisher_identifier'])
+      ),
       createdAt: data['created_at'],
       completedAt: data['completed_at'],
       id: data['id'],
@@ -77,6 +91,8 @@ class Violation{
       carImages: (jsonDecode(data['car_images']) as List<dynamic>).map((e){
         return CarImage.fromJson(e);
       }).toList(),
+      ticketNumber: data['ticket_number'],
+      printPaper: data['print_paper'],
       place: Place.fromJson(jsonDecode(data['place'])),
       paperComment: data['paper_comment'],
       outComment: data['out_comment'],
@@ -108,6 +124,7 @@ class Violation{
        'status': status,
        'created_at': createdAt,
        'plate_info': jsonEncode(plateInfo.toJson()),
+       'publisher_identifier': jsonEncode(user.toJson()),
        'place': jsonEncode(place.toJson()),
        'car_images': jsonEncode(carImages),
        'paper_comment': paperComment,
@@ -137,6 +154,7 @@ class Violation{
       outComment: outComment,
       is_car_registered: is_car_registered,
       registeredCar: registeredCar,
+      user: user,
     );
   }
 }

@@ -15,8 +15,6 @@ import 'package:sjekk_application/data/models/plate_info_model.dart';
 import 'package:sjekk_application/data/models/registered_car_model.dart';
 import 'package:sjekk_application/data/models/violation_model.dart';
 import 'package:sjekk_application/data/repositories/remote/violation_repository.dart';
-import 'package:sjekk_application/presentation/providers/place_provider.dart';
-
 import '../../data/models/print_option_model.dart';
 import '../../data/models/rule_model.dart';
 import 'dart:math';
@@ -40,6 +38,11 @@ class ViolationDetailsProvider extends ChangeNotifier{
   String timePassed = "";
   bool isTimerActive = false;
 
+  bool savedViolationTimerState = false;
+  int savedViolationTimePolicy = 6;
+  Timer? savedViolationTimer;
+  String savedViolationTimePassed = "";
+
   DateTime? siteLoginTime;
 
   setSiteLoginTime(DateTime? date){
@@ -48,6 +51,18 @@ class ViolationDetailsProvider extends ChangeNotifier{
   }
 
   updateTimePolicy(){
+    if(savedViolationTimerState == true){
+      return;
+    }
+    
+    DateTime parsedCreatedAt = siteLoginTime ?? DateTime.now();
+    if(DateTime.now().difference(parsedCreatedAt).inMinutes < savedViolationTimePolicy){
+      if(savedViolationTimer == null || !(savedViolationTimer?.isActive ?? false)){
+        createSavedViolationTimer();
+        return;
+      }
+    }
+
     if(violation.rules.isEmpty){
       return;
     }
@@ -83,6 +98,48 @@ class ViolationDetailsProvider extends ChangeNotifier{
     // }
   }
 
+  createSavedViolationTimer(){
+    savedViolationTimerState = true;
+    notifyListeners();
+
+    savedViolationTimer = Timer.periodic(
+      Duration(seconds: 1), 
+      (timer) {
+        
+    DateTime parsedCreatedAt = siteLoginTime ?? DateTime.now();
+    if(DateTime.now().difference(parsedCreatedAt).inMinutes < savedViolationTimePolicy){
+          savedViolationTimePassed = DateFormat('mm:ss')
+          .format(DateTime.fromMillisecondsSinceEpoch(DateTime.now().difference(parsedCreatedAt).inMilliseconds));
+          notifyListeners();
+    }else{
+      savedViolationTimer?.cancel();
+      savedViolationTimePassed = "";
+      savedViolationTimePolicy = 0;
+      savedViolationTimerState = false;
+      notifyListeners();
+
+    if(violation.rules.isEmpty){
+      return;
+    }
+
+    Rule rule = violation.rules.first;
+
+
+    if(rule.policyTime == 0){
+      return;
+    }
+
+    maxTimePolicy = rule.policyTime;
+    notifyListeners();
+    
+    if(printTimer == null || !(printTimer?.isActive ?? false)){
+      createPrintTimer();
+    }
+    }
+      }
+    );
+  }
+
   createPrintTimer(){
     isTimerActive = true;
     notifyListeners();
@@ -95,14 +152,17 @@ class ViolationDetailsProvider extends ChangeNotifier{
         DateTime parsedCreatedAt = siteLoginTime ?? DateTime.now();
         perror(parsedCreatedAt);
         pinfo(
-          DateTime.now().difference(parsedCreatedAt).inMinutes
+          DateTime.now().difference(parsedCreatedAt).inMinutes < maxTimePolicy + 6
         );
         if(
-          DateTime.now().difference(parsedCreatedAt).inMinutes < maxTimePolicy
-          || DateTime.now().difference(parsedCreatedAt).inMinutes < 6  
+          DateTime.now().difference(parsedCreatedAt).inMinutes < maxTimePolicy + 6
         ){
           timePassed = DateFormat('mm:ss')
-          .format(DateTime.fromMillisecondsSinceEpoch(DateTime.now().difference(parsedCreatedAt).inMilliseconds));
+          .format(
+            DateTime
+            .fromMillisecondsSinceEpoch(DateTime.now().difference(parsedCreatedAt).inMilliseconds)
+            .subtract(Duration(minutes: 6))
+          );
           notifyListeners();
         }else{
           pinfo(',mmm in elses ????/?');
@@ -113,6 +173,9 @@ class ViolationDetailsProvider extends ChangeNotifier{
   }
 
   cancelPrintTimer(){
+    if(savedViolationTimerState){
+      return;
+    }
     isTimerActive = false;
     timePassed = "";
     maxTimePolicy = 0;
@@ -149,6 +212,7 @@ class ViolationDetailsProvider extends ChangeNotifier{
   Future uploadImage(String path) async{
     ViolationRepositoryImpl impl = ViolationRepositoryImpl();
     String image = await impl.uploadImage(violation.id,path);
+    pwarnings(image);
     violation.carImages.add(
       CarImage.fromString(image)
     );
@@ -239,6 +303,7 @@ class ViolationDetailsProvider extends ChangeNotifier{
     });
 
     violation.rules.add(rule);
+
     if(violation.rules.length == 1){
       updateTimePolicy();
     }

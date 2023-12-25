@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:sjekk_application/data/models/place_login_model.dart';
 import 'package:sjekk_application/data/models/shift_model.dart';
 import 'package:sjekk_application/data/repositories/local/cache_repository_impl.dart';
 import 'package:sjekk_application/data/repositories/remote/shift_repository_impl.dart';
 import 'package:sjekk_application/presentation/providers/auth_provider.dart';
+
+import '../../core/utils/logger.dart';
 
 class ShiftProvider extends ChangeNotifier{
   Shift? shift;
@@ -22,8 +27,18 @@ class ShiftProvider extends ChangeNotifier{
     if(AuthProvider.instance.authenticated){
       final shiftId = await CacheRepositoryImpl.instance.get('shift_id');
       final startDate = await CacheRepositoryImpl.instance.get('shift_start_date');
+      final List decoded = jsonDecode(
+        await CacheRepositoryImpl.instance.get('logins') ?? '[]'
+      );
 
-      final instance = Shift(id: shiftId ?? '', startDate: startDate ?? '');
+      final List<PlaceLogin> logins = decoded.map((e) => PlaceLogin.fromJson(e)).toList();
+      pinfo(logins);
+
+      final instance = Shift(
+        id: shiftId ?? '', 
+        startDate: startDate ?? '',
+        logins: logins
+      );
       shift = instance;
     }
   }
@@ -35,6 +50,19 @@ class ShiftProvider extends ChangeNotifier{
     }catch(error){
       print(error.toString());
       return false;
+    }
+  }
+
+  Future storePlaceLogin(PlaceLogin placeLogin) async{
+    try{
+      String encoded = await CacheRepositoryImpl.instance.get('logins') ?? '[]';
+      List decoded = jsonDecode(encoded);
+      List<PlaceLogin> logins = decoded.map((e) => PlaceLogin.fromJson(e)).toList();
+      logins.add(placeLogin);
+
+      await CacheRepositoryImpl.instance.set('logins', jsonEncode(logins));
+    }catch(error){
+      rethrow;
     }
   }
 

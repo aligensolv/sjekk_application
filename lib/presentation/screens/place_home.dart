@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:sjekk_application/core/utils/logger.dart';
+import 'package:sjekk_application/core/utils/snackbar_utils.dart';
+import 'package:sjekk_application/data/models/place_login_model.dart';
 import 'package:sjekk_application/data/models/place_model.dart';
 import 'package:sjekk_application/data/repositories/remote/violation_repository.dart';
 import 'package:sjekk_application/presentation/providers/place_provider.dart';
+import 'package:sjekk_application/presentation/providers/shift_provider.dart';
 import 'package:sjekk_application/presentation/screens/bottom_navigator_screen.dart';
 import 'package:sjekk_application/presentation/screens/cars_screen.dart';
 import 'package:sjekk_application/presentation/screens/choose_plate_input.dart';
@@ -60,6 +64,15 @@ class _PlaceHomeState extends State<PlaceHome> {
 
     print(shouldLeave);
     if(shouldLeave != null && shouldLeave){
+        final placeProvider = context.read<PlaceProvider>();
+      PlaceLogin placeLogin = PlaceLogin(
+        placeName: placeProvider.selectedPlace!.location,
+        placeId: placeProvider.selectedPlace!.id!,
+        loginTime: placeProvider.selectedPlaceLoginTime!.toLocal().toString(),
+        logoutTime: DateTime.now().toLocal().toString()
+      );
+
+      await context.read<ShiftProvider>().storePlaceLogin(placeLogin);
       Provider.of<PlaceProvider>(context, listen: false).logoutFromCurrentPlace();
       Navigator.of(context).popUntil(
         (route) => route.settings.name == PlacesScreen.route
@@ -85,12 +98,22 @@ class _PlaceHomeState extends State<PlaceHome> {
               alignment: Alignment.centerLeft,
               child: GestureDetector(
                 onTap: () async{
-                  bool ok = await showDialog(
+                  await showDialog(
                     context: context, 
                     builder: (context){
                       return TemplateConfirmationDialog(
-                        onConfirmation: (){
-                          Provider.of<PlaceProvider>(context, listen: false).logoutFromCurrentPlace();
+                        onConfirmation: () async{
+                                              final placeProvider = context.read<PlaceProvider>();
+                    PlaceLogin placeLogin = PlaceLogin(
+                      placeName: placeProvider.selectedPlace!.location,
+                      placeId: placeProvider.selectedPlace!.id!,
+                      loginTime: placeProvider.selectedPlaceLoginTime!.toLocal().toString(),
+                      logoutTime: DateTime.now().toLocal().toString()
+                    );
+
+                    await context.read<ShiftProvider>().storePlaceLogin(placeLogin);
+                            Provider.of<PlaceProvider>(context, listen: false).logoutFromCurrentPlace();
+
                           Navigator.pop(context,true);
                           // Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => route.isFirst);
                         }, 
@@ -100,12 +123,11 @@ class _PlaceHomeState extends State<PlaceHome> {
                     }
                   );
     
-                  if(ok){
-                    Navigator.popUntil(
+                                      Navigator.popUntil(
                         context, 
                         (route) => route.settings.name == BottomScreenNavigator.route
                       );
-                  }
+                  
                 },
                 child: const Icon(Icons.logout,size: 30,color: dangerColor,),
               ),

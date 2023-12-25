@@ -13,6 +13,7 @@ import 'package:sjekk_application/presentation/widgets/template/widgets/empty_da
 import '../widgets/template/components/template_option.dart';
 import '../widgets/template/components/template_options_menu.dart';
 import '../widgets/template/widgets/place_registered_vl.dart';
+import 'completed_violations_details_screen.dart';
 
 
 class CompletedViolationsScreen extends StatefulWidget {
@@ -87,7 +88,7 @@ class _CompletedViolationsScreenState extends State<CompletedViolationsScreen> {
                     Violation violation = violations[index];
               
                     return GestureDetector(
-                                                onLongPress: (){
+                                                onTap: (){
               if(entry?.mounted ?? false){
                 entry?.remove();
               }
@@ -99,6 +100,25 @@ class _CompletedViolationsScreenState extends State<CompletedViolationsScreen> {
                   headerColor: Colors.black.withOpacity(0.7),
                   options: [
                     TemplateOption(
+                      text: 'INFORMATION', 
+                      backgroundColor: secondaryColor,
+                      textColor: Colors.white,
+                      iconColor: Colors.white,
+                      icon: Icons.info_outline, 
+                      onTap: () async{
+                        entry?.remove();
+                        entry = null;
+                        Provider.of<ViolationDetailsProvider>(context, listen: false).setViolation(violation);
+                        Navigator.of(context).pushNamed(
+                          CompletedViolationBriefInformation.route,
+                          arguments: {
+                            'violation': violations[index]
+                          }
+                        );
+                      }
+                    ),
+                     
+                    TemplateOption(
                       text: 'PRINT', 
                       backgroundColor: primaryColor,
                       textColor: Colors.white,
@@ -108,20 +128,24 @@ class _CompletedViolationsScreenState extends State<CompletedViolationsScreen> {
 
                       }
                     ),
-                    TemplateOption(
-                      text: 'INFORMATION', 
+                                       TemplateOption(
+                      text: 'FULL DATA', 
                       backgroundColor: secondaryColor,
                       textColor: Colors.white,
                       iconColor: Colors.white,
-                      icon: Icons.info_outline, 
+                      icon: Icons.data_object, 
                       onTap: () async{
                         entry?.remove();
                         entry = null;
-                        Navigator.of(context).pushNamed(
-                          CompletedViolationBriefInformation.route,
-                          arguments: {
-                            'violation': violations[index]
-                          }
+
+                        Provider.of<ViolationDetailsProvider>(context, listen: false).setViolation(violation);
+                        Navigator.of(context).push(
+                          PageRouteBuilder(
+                            pageBuilder: (context,a,s) => CompletedViolationDetailsScreen(violation: violation,),
+                            transitionDuration: Duration.zero,
+                            reverseTransitionDuration: Duration.zero
+                          ),
+                          
                         );
                       }
                     ),
@@ -162,7 +186,7 @@ class _CompletedViolationsScreenState extends State<CompletedViolationsScreen> {
               entry!
             );
             },
-                      child: PlaceRegisteredVL(vl: violation)
+                      child: CompletedViolationWidget(violation: violation)
                     );
                   },
                   separatorBuilder: (context, index) {

@@ -24,6 +24,7 @@ import 'package:sjekk_application/presentation/widgets/template/theme/app_theme.
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 
 import 'data/repositories/local/cache_repository_impl.dart';
+import 'debug.dart';
 import 'presentation/providers/local_violation_details_provider.dart';
 import 'presentation/wrappers/connectivity_wrapper.dart';
 
@@ -110,7 +111,7 @@ Future<String> getDemoStorageBaseDirectory() async {
 //   if (notificationResponse.payload != null) {
     
 //   }
-// }
+// }ء
 
 // @pragma('vm:entry-point')
 // void onDidReceiveNotificationResponse(NotificationResponse notificationResponse) {
@@ -321,6 +322,7 @@ class EntryPoint extends StatelessWidget {
         // navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         home: ConnectivityWrapper(),
+        // home: TempTest(),
       ),
     );
   }

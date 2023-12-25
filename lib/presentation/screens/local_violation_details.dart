@@ -7,11 +7,15 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:scanbot_sdk/license_plate_scan_data.dart';
+import 'package:scanbot_sdk/scanbot_sdk.dart';
 import 'package:sjekk_application/core/utils/router_utils.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
 import 'package:sjekk_application/data/models/violation_model.dart';
 import 'package:sjekk_application/presentation/providers/place_provider.dart';
 import 'package:sjekk_application/presentation/screens/bottom_navigator_screen.dart';
+import 'package:sjekk_application/presentation/screens/local_select_brand.dart';
+import 'package:sjekk_application/presentation/screens/local_select_color.dart';
 import 'package:sjekk_application/presentation/screens/select_car_type_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
@@ -24,11 +28,13 @@ import 'package:sjekk_application/presentation/widgets/template/theme/colors_the
 import '../../data/models/rule_model.dart';
 import '../providers/create_violation_provider.dart';
 import '../providers/local_violation_details_provider.dart';
+import '../providers/rule_provider.dart';
 import '../providers/violation_details_provider.dart';
 import '../widgets/template/components/template_dialog.dart';
 import '../widgets/template/components/template_image.dart';
 import 'gallery_view.dart';
 import 'local_select_rule_screen.dart';
+import 'local_select_violation_type.dart';
 import 'place_home.dart';
 
 enum OptionMenuFlags{
@@ -53,6 +59,9 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
   TextEditingController outterController = TextEditingController();
 
   OverlayEntry? entry;
+  
+  final TextEditingController plateController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
 
   Future<bool> localViolationDetailsBack(bool stopDefaultButtonEvent, RouteInfo info) async{
     if(entry?.mounted ?? false){
@@ -86,7 +95,6 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
 
                 createProvider.setSavedViolation(
                   s_violation: vl,
-                  place: context.read<PlaceProvider>().selectedPlace
                 );
 
                 await createProvider.saveViolation();
@@ -135,37 +143,39 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
     return true;
   }
 
+
+  void initializeRules() async{
+    await Provider.of<RuleProvider>(context, listen: false).fetchRules();
+  }
         
   @override
   void initState() {
     super.initState();
-    BackButtonInterceptor.add(localViolationDetailsBack,zIndex: 2,context: context);
-        final provider = Provider.of<LocalViolationDetailsProvider>(context,listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+          BackButtonInterceptor.add(localViolationDetailsBack,zIndex: 2,context: context);
 
-    DateTime parsedCreatedAt = DateTime.parse(provider.localViolationCopy.createdAt);
-      int maxTimePolicy = 0;
-      if(provider.localViolationCopy.rules.any((element) => element.policyTime > 0)){
-        maxTimePolicy = provider.localViolationCopy.rules.map((e){
-          print(e.policyTime.toString());
-          return e.policyTime;
-        }).reduce(max);
-      }
+    initializeRules();
 
-      print(maxTimePolicy);
-    if(DateTime.now().difference(parsedCreatedAt).inMinutes < maxTimePolicy){
-      Provider.of<LocalViolationDetailsProvider>(context, listen: false).updateTimePolicy();
-    }
+      // context.read<LocalViolationDetailsProvider>().setSiteLoginTime(
+      //   DateTime.parse(
+      //     context.read<LocalViolationDetailsProvider>().localViolationCopy.createdAt
+      //   )
+      // );
+      // Provider.of<LocalViolationDetailsProvider>(context, listen: false).updateTimePolicy();
+    
   final localViolationDetailsProvider = Provider.of<LocalViolationDetailsProvider>(context, listen: false);
     
         innerController.text = localViolationDetailsProvider.localViolationCopy.paperComment;
         outterController.text = localViolationDetailsProvider.localViolationCopy.outComment;
+    });
   }
 
 
   @override
   void dispose() {
     BackButtonInterceptor.remove(localViolationDetailsBack);
-    print('i was dispoosed');
+    plateController.dispose();
+    descriptionController.dispose();
     innerController.dispose();
     outterController.dispose();
     super.dispose();
@@ -203,7 +213,7 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
                 ),
                 Tab(
                   icon: Icon(Icons.print),
-                ),
+                )
               ],
             ),
             12.h,
@@ -214,7 +224,7 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
                     ImagesWidget(),
                     RulesWidget(),
                     CommentsWidget(),
-                    PrintWidget(),
+                    PrintWidget()
                   ],
                 ),
               ),
@@ -224,6 +234,76 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
       ),
     );
   }
+
+  Widget PrintWidget(){
+
+  final media = MediaQuery.of(context).size;
+
+  return Consumer<LocalViolationDetailsProvider>(
+    builder: (BuildContext context, LocalViolationDetailsProvider violationDetailsProvider, Widget? child) { 
+        return Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: ListView.separated(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: violationDetailsProvider.printOptions.length,
+                  itemBuilder: (context,index){
+                    return GestureDetector(
+                      onTap: () async{
+                        await violationDetailsProvider.setSelectedPrintOptionIndex(index);
+                      },
+                      child: Container(
+                                width: media.width * 0.7,
+                                height: 40,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                      color: violationDetailsProvider.selectedPrintOptionIndex == index ? Colors.blue : Colors.black12
+                                ),
+                                child: Text(
+                                  violationDetailsProvider.printOptions[index].name.toUpperCase(),
+                                  style: TextStyle(
+                                    color: violationDetailsProvider.selectedPrintOptionIndex == index ? Colors.white : Colors.black
+                                  ),
+                                ),
+                              ),
+                    );
+                  },
+                  separatorBuilder: (context,index){
+                    return SizedBox(height: 12,);
+                  },
+                ),
+              ),
+
+              NormalTemplateButton(
+                width: double.infinity,
+                backgroundColor: secondaryColor,
+                onPressed: ()async{
+
+                  ImagePicker imagePicker = ImagePicker();
+                  XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
+                  if(file != null){
+                    await violationDetailsProvider.pushImage(file.path);
+                    SnackbarUtils.showSnackbar(context, 'VL is completed');
+                    Navigator.popUntil(context, (route) =>  route.settings.name == PlaceHome.route || route.settings.name == BottomScreenNavigator.route);
+                    await Provider.of<LocalViolationDetailsProvider>(context, listen: false).uploadViolationToServer();
+
+                    // ViolationRepositoryImpl vil = ViolationRepositoryImpl();
+                    //   await vil.deleteViolation(violationDetailsProvider.violation);
+                    }
+
+                    await context.read<CreateViolationProvider>().clearAll();
+              }, text: 'PRINT',),
+            ],
+          ),
+        );
+    },
+  );
+}
 
   Widget CommentsWidget(){
     return Consumer<LocalViolationDetailsProvider>(
@@ -296,17 +376,110 @@ class _LocalViolationDetailsScreenState extends State<LocalViolationDetailsScree
 
 Widget CarInfoWidget() {
   DateFormat formatter = DateFormat('HH:mm .dd.MM.yyyy');
-  return Padding(
+  return Consumer<LocalViolationDetailsProvider>(
+    builder: (BuildContext context, LocalViolationDetailsProvider localViolationDetailsProvider, Widget? child) { 
+        return Padding(
     padding: const EdgeInsets.all(12.0),
     child: SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TemplateContainerCard(
-            title: context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.plate,
-            height: 40,
-  
-            backgroundColor: context.read<LocalViolationDetailsProvider>().localViolationCopy.is_car_registered ? Colors.blue : dangerColor,
+          GestureDetector(
+            onTap: () async{
+                      await showDialog(
+                        context: context, 
+                        builder: (context){
+                          return AlertDialog(
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Enter Plate'),
+                                GestureDetector(
+                                  onTap: () async{
+                                    var config = LicensePlateScannerConfiguration(
+                                    topBarBackgroundColor: primaryColor,  
+                                    scanStrategy: LicensePlateScanStrategy.ML_BASED,
+                                    cameraModule: CameraModule.BACK,
+                                    
+                                    confirmationDialogAccentColor: Colors.green);
+                                    LicensePlateScanResult result = await ScanbotSdkUi.startLicensePlateScanner(config);
+                                    if(result.operationResult == OperationResult.CANCELED || result.operationResult == OperationResult.ERROR){
+                                      return Navigator.pop(context);
+                                    }
+
+                                    final createViolationProvider = context.read<CreateViolationProvider>();
+      
+                                    await createViolationProvider.getCarInfo(result.licensePlate); 
+                                    await createViolationProvider.getSystemCar(result.licensePlate);
+
+                                    await localViolationDetailsProvider.changePlateInfo(
+                                      createViolationProvider.plateInfo
+                                    );
+
+                                    await localViolationDetailsProvider.changeRegisterdCarData(
+                                      createViolationProvider.registeredCar
+                                    );
+
+                                    Navigator.pop(context);
+                                  },
+                                  child: Icon(Icons.camera,color: secondaryColor,),
+                                )
+                              ],
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.zero
+                            ),
+                            content: Container(
+                              width: 300,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SecondaryTemplateTextFieldWithIcon(
+                                    hintText: 'PLATE',
+                                    icon: Icons.search,
+                                    controller: plateController,
+                                  ),
+
+                                  12.h,
+
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: NormalTemplateButton(
+                                      text: 'OK',
+                                      onPressed: () async{
+                                        final createViolationProvider = context.read<CreateViolationProvider>();
+      
+                                        await createViolationProvider.getCarInfo(plateController.text); 
+                                        await createViolationProvider.getSystemCar(plateController.text);
+
+                                        await localViolationDetailsProvider.changePlateInfo(
+                                          createViolationProvider.plateInfo
+                                        );
+
+                                        await localViolationDetailsProvider.changeRegisterdCarData(
+                                          createViolationProvider.registeredCar
+                                        );
+
+                                        plateController.clear();
+
+                                        Navigator.pop(context);
+                                      },
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                      );
+                    },
+            child: TemplateContainerCard(
+              title: context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.plate.isEmpty ?
+               'N/A' : context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.plate,
+              height: 40,
+            
+              backgroundColor: context.read<LocalViolationDetailsProvider>().localViolationCopy.is_car_registered ? Colors.blue : dangerColor,
+            ),
           ),
           12.w,
           12.h,
@@ -314,13 +487,98 @@ Widget CarInfoWidget() {
             'TYPE', 
             context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.type, icon: Icons.category,
             editable: true,
-            route: SelectCarTypeScreen()
+            route: LocalSelectCarTypeScreen()
           ),
           _buildInfoContainer('STATUS', context.read<LocalViolationDetailsProvider>().localViolationCopy.status.toUpperCase(), icon: FontAwesome.exclamation),
-          _buildInfoContainer('BRAND', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.brand,icon: FontAwesome.car),
-          _buildInfoContainer('YEAR', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.year, icon: Icons.calendar_month),
-          _buildInfoContainer('DESCRIPTION', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.description, icon: Icons.text_fields),
-          _buildInfoContainer('COLOR', context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.color, icon: Icons.color_lens),
+          _buildInfoContainer(
+            'BRAND', 
+            context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.brand,icon: FontAwesome.car,
+            editable: true,
+            route: LocalSelectCarBrandScreen()  
+          ),
+          GestureDetector(
+            onTap: () async{
+                await showDialog(
+                  context: context, 
+                  builder: (context){
+                    return AlertDialog(
+                      title: Text('Select Date'),
+                      content: Container(
+                        width: 300,
+                        height: 300,
+                        child: YearPicker(
+                        firstDate: DateTime(1990), 
+                        lastDate: DateTime(2240), 
+                        selectedDate: DateTime(2000), 
+                        onChanged: (year) async{
+                          await localViolationDetailsProvider.changeViolationYear(year.year.toString());
+                          Navigator.pop(context);
+                        }
+                        ),
+                      ),
+                    );
+                  }
+                );
+              },
+            child: _buildInfoContainer(
+              'YEAR', 
+              context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.year, icon: Icons.calendar_month,
+              editable: true,
+
+              
+            )
+          ),
+          GestureDetector(
+            onTap: () async {
+                await showDialog(
+                  context: context, 
+                  builder: (context){
+                    return AlertDialog(
+                      title: Text('Enter Description'),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero
+                      ),
+                      content: Container(
+                        width: 300,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            NormalTemplateTextField(
+                              lines: 5,
+                              controller: descriptionController, 
+                              hintText: 'Description',
+                            ),
+                            12.h,
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: NormalTemplateButton(
+                                onPressed: () async{
+                                  await localViolationDetailsProvider.changeViolationDescription(
+                                    descriptionController.text
+                                  );
+                                  Navigator.pop(context);
+                                }, 
+                                text: 'OK'
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                );
+              },
+            child: _buildInfoContainer(
+              'DESCRIPTION',
+              context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.description, icon: Icons.text_fields,
+              editable: true  
+            )),
+          _buildInfoContainer(
+            'COLOR', 
+            context.read<LocalViolationDetailsProvider>().localViolationCopy.plateInfo.color, icon: Icons.color_lens,
+            editable: true,
+            route: LocalSelectCarColorScreen()  
+          ),
           _buildInfoContainer('CREATED AT', formatter.format(
             DateTime.parse(context.read<LocalViolationDetailsProvider>().localViolationCopy.createdAt)
           ) , icon: Icons.date_range),
@@ -339,6 +597,8 @@ Widget CarInfoWidget() {
         ],
       ),
     ),
+  );
+    },
   );
 }
 
@@ -359,6 +619,7 @@ Widget _buildInfoContainer(
         color: Colors.black12,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: EdgeInsets.all(12.0),
@@ -373,6 +634,7 @@ Widget _buildInfoContainer(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                6.h,
                 Text(
                   title,
                   style: const TextStyle(
@@ -388,6 +650,14 @@ Widget _buildInfoContainer(
               ],
             ),
           ),
+          if(editable)
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Icon(Icons.swap_horiz),
+            ),
+          )
         ],
       ),
     ),
@@ -528,6 +798,8 @@ Widget ImagesWidget(){
 Widget RulesWidget(){
   return Consumer<LocalViolationDetailsProvider>(
     builder: (BuildContext context, LocalViolationDetailsProvider localViolationDetailsProvider, Widget? child) { 
+      final ruleProvider = context.read<RuleProvider>();
+
           return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -536,135 +808,35 @@ Widget RulesWidget(){
           Expanded(
             child: ListView.separated(
               padding: EdgeInsets.zero,
-              itemCount: localViolationDetailsProvider.localViolationCopy.rules.length,
+              itemCount: ruleProvider.rules.length,
               separatorBuilder: (context,index){
                 return 12.h;
               },
               itemBuilder: ((context, index) {
-                Rule rule = localViolationDetailsProvider.localViolationCopy.rules[index];
+                Rule rule = ruleProvider.rules[index];
                 return GestureDetector(
-                  onTap: (){
-          
+                  onTap: () async{
+                    if(localViolationDetailsProvider.localViolationCopy.rules.any((element) => element.id == rule.id)){
+                      await localViolationDetailsProvider.removeRule(rule);
+                    }else{
+                      await localViolationDetailsProvider.pushRule(rule);
+                    }
                   },
                   child: TemplateContainerCard(
-                    backgroundColor: primaryColor,
+                    backgroundColor: localViolationDetailsProvider.localViolationCopy.rules
+                      .any((element) => element.id == rule.id) ? primaryColor : Colors.black12,
+                      textColor: localViolationDetailsProvider.localViolationCopy.rules
+                      .any((element) => element.id == rule.id) ? null : Colors.black,
                     title: '${rule.name} (${rule.charge} kr)',
+                    // icon: Icons.euro,
                   ),
                 );
               }),
             ),
           ),
-
-          12.h,
-          NormalTemplateButton(
-            text: 'ADD RULE',
-            width: double.infinity,
-            backgroundColor: secondaryColor,
-            onPressed: (){
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => LocalSelectRuleScreen())
-              );
-            },
-          )
         ],
       ),
     );
-    },
-  );
-}
-
-Widget PrintWidget(){
-
-  final media = MediaQuery.of(context).size;
-
-  return Consumer<LocalViolationDetailsProvider>(
-    builder: (BuildContext context, LocalViolationDetailsProvider localViolationDetailsProvider, Widget? child) { 
-      // DateTime parsedCreatedAt = DateTime.parse(localViolationDetailsProvider.localViolationCopy.createdAt);
-              // final provider = Provider.of<ViolationDetailsProvider>(context,listen: false);
-        // int maxTimePolicy = 0;
-        // if(provider.violation.rules.any((element) => element.timePolicy > 0)){
-        //   maxTimePolicy = provider.violation.rules.map((e) => e.timePolicy).reduce(max);
-        // }
-        return Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if(localViolationDetailsProvider.isTimerActive)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TemplateParagraphText('You Have wait ${localViolationDetailsProvider.maxTimePolicy} minutes before printing'),
-                  12.h,
-                  TemplateHeadlineText(
-                    'Time passed: ${localViolationDetailsProvider.timePassed}'
-                  ),
-                ],
-              ),
-              if(localViolationDetailsProvider.isTimerActive)
-              24.h,
-              Expanded(
-                child: ListView.separated(
-                  padding: EdgeInsets.zero,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: localViolationDetailsProvider.printOptions.length,
-                  itemBuilder: (context,index){
-                    return GestureDetector(
-                      onTap: (){
-                        localViolationDetailsProvider.setSelectedPrintOptionIndex(index);
-                      },
-                      child: Container(
-                                width: media.width * 0.7,
-                                height: 40,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                      color: localViolationDetailsProvider.selectedPrintOptionIndex == index ? Colors.blue : Colors.black26
-                                ),
-                                child: Text(
-                                  localViolationDetailsProvider.printOptions[index].name,
-                                  style: TextStyle(
-                                    color: localViolationDetailsProvider.selectedPrintOptionIndex == index ? Colors.white : Colors.black
-                                  ),
-                                ),
-                              ),
-                    );
-                  },
-                  separatorBuilder: (context,index){
-                    return SizedBox(height: 12,);
-                  },
-                ),
-              ),
-
-              Opacity(
-                opacity: localViolationDetailsProvider.isTimerActive ? 0.5 : 1,
-                child: AbsorbPointer(
-                  absorbing: localViolationDetailsProvider.isTimerActive,
-                  child: NormalTemplateButton(
-                    width: double.infinity,
-                    backgroundColor: secondaryColor,
-                    onPressed: ()async{
-
-                      ImagePicker imagePicker = ImagePicker();
-                      XFile? file = await imagePicker.pickImage(source: ImageSource.camera);
-                      if(file != null){
-                        await localViolationDetailsProvider.pushImage(file.path);
-                        SnackbarUtils.showSnackbar(context, 'VL is completed');
-                        Navigator.popUntil(context, (route) => route.settings.name == BottomScreenNavigator.route || route.settings.name == PlaceHome.route);
-                        await Provider.of<CreateViolationProvider>(context, listen: false).createViolation(
-                          violation: localViolationDetailsProvider.localViolationCopy,
-                          place: localViolationDetailsProvider.localViolationCopy.place,
-                          selectedRules: localViolationDetailsProvider.localViolationCopy.rules.map((e){
-                          return e.id!;
-                          }).toList()
-                        );
-                      }
-                  }, text: 'PRINT',),
-                ),
-              ),
-            ],
-          ),
-        );
     },
   );
 }

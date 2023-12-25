@@ -10,26 +10,18 @@ import 'package:provider/provider.dart';
 import 'package:scanbot_sdk/scanbot_sdk.dart';
 import 'package:sjekk_application/core/utils/logger.dart';
 import 'package:sjekk_application/core/utils/snackbar_utils.dart';
-import 'package:sjekk_application/presentation/providers/place_provider.dart';
 import 'package:sjekk_application/presentation/providers/violation_details_provider.dart';
-import 'package:sjekk_application/presentation/providers/violations_provider.dart';
 import 'package:sjekk_application/presentation/screens/bottom_navigator_screen.dart';
-import 'package:sjekk_application/presentation/screens/choose_plate_input.dart';
 import 'package:sjekk_application/presentation/screens/select_brand_screen.dart';
 import 'package:sjekk_application/presentation/screens/select_car_type_screen.dart';
 import 'package:sjekk_application/presentation/screens/select_color_screen.dart';
-import 'package:sjekk_application/presentation/screens/select_rule_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_button.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_container.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text.dart';
 import 'package:sjekk_application/presentation/widgets/template/components/template_text_field.dart';
 import 'package:sjekk_application/presentation/widgets/template/extensions/sizedbox_extension.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
-import 'package:sjekk_application/presentation/widgets/template/widgets/rule_container.dart';
-
-import '../../core/utils/router_utils.dart';
 import '../../data/models/rule_model.dart';
-import '../../data/models/violation_model.dart';
 import '../../data/repositories/remote/violation_repository.dart';
 import '../providers/create_violation_provider.dart';
 import '../providers/rule_provider.dart';
@@ -40,11 +32,8 @@ import '../widgets/template/components/template_options_menu.dart';
 import 'gallery_view.dart';
 import 'place_home.dart';
 
-import 'dart:math';
 class ViolationDetailsScreen extends StatefulWidget {
   static const String route = 'violation_details_screen';
-  // final Violation violation;
-
   const ViolationDetailsScreen({Key? key}) : super(key: key);
 
   @override
@@ -84,31 +73,30 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> with Si
       BackButtonInterceptor.add(violationDetailsBack);
 
       context.read<ViolationDetailsProvider>().setSiteLoginTime(
-        // context.read<PlaceProvider>().startTime
         DateTime.parse(
           context.read<ViolationDetailsProvider>().violation.placeStartTime ?? ''
         )
       );
       Provider.of<ViolationDetailsProvider>(context, listen: false).updateTimePolicy();
 
-      DateTime parsedCreatedAt = context.read<ViolationDetailsProvider>().siteLoginTime ?? DateTime.now();
-      pwarnings(context.read<ViolationDetailsProvider>().siteLoginTime);
-      pwarnings(DateTime.now().difference(parsedCreatedAt).inMinutes);
-      if(
-        context.read<ViolationDetailsProvider>().siteLoginTime != null
-        && DateTime.now().difference(parsedCreatedAt).inMinutes <= 6  
-      ){
-        context.read<ViolationDetailsProvider>().cancelPrintTimer();
-              context.read<ViolationDetailsProvider>().setSiteLoginTime(
-        // context.read<PlaceProvider>().startTime
-        DateTime.parse(
-          context.read<ViolationDetailsProvider>().violation.placeStartTime ?? ''
-        )
-      );
+      // DateTime parsedCreatedAt = context.read<ViolationDetailsProvider>().siteLoginTime ?? DateTime.now();
+      // pwarnings(context.read<ViolationDetailsProvider>().siteLoginTime);
+      // pwarnings(DateTime.now().difference(parsedCreatedAt).inMinutes);
+      // if(
+      //   context.read<ViolationDetailsProvider>().siteLoginTime != null
+      //   && DateTime.now().difference(parsedCreatedAt).inMinutes <= 6  
+      // ){
+      //   context.read<ViolationDetailsProvider>().cancelPrintTimer();
+      //         context.read<ViolationDetailsProvider>().setSiteLoginTime(
+      //   // context.read<PlaceProvider>().startTime
+      //   DateTime.parse(
+      //     context.read<ViolationDetailsProvider>().violation.placeStartTime ?? ''
+      //   )
+      // );
 
-      context.read<ViolationDetailsProvider>().maxTimePolicy = 6;
-        context.read<ViolationDetailsProvider>().createPrintTimer();
-      }
+      // context.read<ViolationDetailsProvider>().maxTimePolicy = 6;
+      //   context.read<ViolationDetailsProvider>().createPrintTimer();
+      // }
     });
 
   final violationDetailsProvider = Provider.of<ViolationDetailsProvider>(context,listen: false);
@@ -338,6 +326,8 @@ Widget CarInfoWidget() {
                                         await violationDetailsProvider.changeRegisterdCarData(
                                           createViolationProvider.registeredCar
                                         );
+
+                                        plateController.clear();
 
                                         Navigator.pop(context);
                                       },
@@ -737,56 +727,6 @@ Widget RulesWidget(){
                       await violationDetailsProvider.attachRuleToViolation(rule);
                     }
                   },
-                                            onLongPress: () async{
-                          if(rulesOverlay?.mounted ?? false){
-          rulesOverlay?.remove();
-        }
-
-          rulesOverlay = OverlayEntry(
-          builder: (context){
-            return TemplateOptionsMenu(
-            headerText: 'OPTIONS',
-            headerColor: Colors.black.withOpacity(0.7),
-            options: [
-                TemplateOption(
-                text: 'DELETE', 
-                icon: Icons.close, 
-                backgroundColor: dangerColor,
-                iconColor: Colors.white,
-                textColor: Colors.white,
-                onTap: () async{
-                  await violationDetailsProvider.deattachRuleToViolation(
-                    violationDetailsProvider.violation.rules[index]
-                  );
-                  // ViolationRepositoryImpl vil = ViolationRepositoryImpl();
-                  // await vil.deleteViolation(violation);
-
-                  rulesOverlay?.remove();
-                  rulesOverlay = null;
-                },
-                ),
-
-              TemplateOption(
-                text: 'BACK', 
-                icon: Icons.redo,
-                backgroundColor: Colors.black12,
-                iconColor: Colors.white,
-                textColor: Colors.white,
-                onTap: () async{
-                rulesOverlay?.remove();
-                rulesOverlay = null;
-                }
-              ),
-            ],
-          );
-          }
-        );
-
-
-      Overlay.of(context).insert(
-        rulesOverlay!
-      );
-                        },
                   child: TemplateContainerCard(
                     backgroundColor: violationDetailsProvider.violation.rules
                       .any((element) => element.id == rule.id) ? primaryColor : Colors.black12,
@@ -831,6 +771,18 @@ Widget PrintWidget(){
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if(provider.savedViolationTimerState)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TemplateParagraphText('You Have wait ${provider.savedViolationTimePolicy} minutes'),
+                  12.h,
+                  TemplateHeadlineText(
+                    'Time passed: ${provider.savedViolationTimePassed}'
+                  ),
+                ],
+              ),
+
               if(provider.isTimerActive)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -878,7 +830,7 @@ Widget PrintWidget(){
               ),
 
               Opacity(
-                opacity: provider.isTimerActive ? 0.5 : (
+                opacity: provider.isTimerActive|| provider.savedViolationTimerState ? 0.5 : (
                   provider.violation.carImages.isNotEmpty 
                   && provider.violation.rules.isNotEmpty
                   && provider.violation.plateInfo.brand != null ?
@@ -886,6 +838,7 @@ Widget PrintWidget(){
                 ),
                 child: AbsorbPointer(
                   absorbing: provider.isTimerActive
+                  || provider.savedViolationTimerState
                   || provider.violation.carImages.isEmpty 
                   || provider.violation.rules.isEmpty
                   || provider.violation.plateInfo.brand == null 

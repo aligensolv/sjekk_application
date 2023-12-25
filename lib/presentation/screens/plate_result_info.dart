@@ -7,6 +7,7 @@ import 'package:sjekk_application/core/constants/app_images.dart';
 import 'package:sjekk_application/core/utils/logger.dart';
 import 'package:sjekk_application/data/models/plate_info_model.dart';
 import 'package:sjekk_application/data/models/registered_car_model.dart';
+import 'package:sjekk_application/presentation/providers/auth_provider.dart';
 import 'package:sjekk_application/presentation/providers/create_violation_provider.dart';
 import 'package:sjekk_application/presentation/providers/place_provider.dart';
 import 'package:sjekk_application/presentation/screens/place_home.dart';
@@ -266,6 +267,7 @@ class _PlateResultInfoState extends State<PlateResultInfo> {
                       Violation x_violation = Violation(
                           rules: [], 
                           status: 'saved', 
+                          user: context.read<AuthProvider>().user,
                           createdAt: DateTime.now().toLocal().toString(), 
                           placeStartTime: context.read<PlaceProvider>().startTime?.toLocal().toString(),
                           plateInfo: plateInfo, 
@@ -322,6 +324,7 @@ class _PlateResultInfoState extends State<PlateResultInfo> {
                         place: place!, 
                         paperComment: '', 
                         outComment: '', 
+                        user: context.read<AuthProvider>().user,
                         is_car_registered: registeredCar != null,  
                         registeredCar: registeredCar, 
                         completedAt: null

@@ -19,7 +19,7 @@ class DatabaseHelper {
   Future<Database> initDatabase() async {
     // Get the path to the database
     String databasesPath = await getDatabasesPath();
-    String path = join(databasesPath, 'sjekk_kontrol_v1.db');
+    String path = join(databasesPath, 'sjekk_kontrol_v2.db');
 
     // Open/create the database at a given path
     return await openDatabase(path, version: 1, onCreate: _createTable);
@@ -30,6 +30,7 @@ class DatabaseHelper {
     await db.execute('''
         CREATE TABLE violations (
         id INTEGER PRIMARY KEY,
+        publisher_identifier TEXT,
         plate_info TEXT,
         rules TEXT,
         status TEXT,

@@ -20,7 +20,6 @@ class CreateViolationProvider extends ChangeNotifier{
 
   setSavedViolation({
     Violation? s_violation,
-    Place? place
   }){
     savedViolation = s_violation;
     notifyListeners();
@@ -111,6 +110,12 @@ class CreateViolationProvider extends ChangeNotifier{
 
   Future<void> getSystemCar(String plate) async{
     try{
+      if(plate.isEmpty){
+        registeredCar = null;
+        isRegistered = false;
+        notifyListeners();
+        return;
+      }
       final CarRepositoryImpl carRepository = CarRepositoryImpl();
       registeredCar = await carRepository.getCarByPlate(plate);
       isRegistered = true;

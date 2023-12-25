@@ -50,6 +50,7 @@ dependencies:
   flutter_local_notifications: ^16.2.0
   flutter_background_service: ^5.0.5
   logger: ^2.0.2+1
+  workmanager: ^0.5.2
 
 dev_dependencies:
   flutter_test:

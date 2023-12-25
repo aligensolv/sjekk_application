@@ -7,6 +7,7 @@ import 'package:sjekk_application/presentation/providers/violations_provider.dar
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
 import 'package:sjekk_application/presentation/widgets/template/widgets/empty_data_container.dart';
 import 'package:sjekk_application/presentation/widgets/template/widgets/place_registered_vl.dart';
+import 'package:sjekk_application/presentation/widgets/template/widgets/saved_violation.dart';
 
 import '../../data/repositories/remote/violation_repository.dart';
 import '../widgets/template/components/template_option.dart';
@@ -154,27 +155,8 @@ class _SavedViolationsScreenState extends State<SavedViolationScreen> {
           entry!
         );
         },
-                      child: Stack(
-                        children: [
-                          PlaceRegisteredVL(
-                            vl: violation
-                          ),
-
-                          Positioned(
-                            top: 12,
-                            right: 52,
-                            child: Container(
-                              padding: EdgeInsets.all(6.0),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8.0)
-                              ),
-                              child: Text(
-                                violation.place.location
-                              ),
-                            ),
-                          )
-                        ],
+                      child: SavedViolationWidget(
+                        violation: violation
                       ),
                     );
                 },

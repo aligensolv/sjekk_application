@@ -22,12 +22,14 @@ class TemplateHeaderText extends StatelessWidget {
 class TemplateHeadlineText extends StatelessWidget {
   final String text;
   double? size;
-  TemplateHeadlineText(this.text, {super.key, this.size = 20});
+  Color? color;
+  TemplateHeadlineText(this.text, {super.key, this.size = 20, this.color = textColor});
 
   @override
   Widget build(BuildContext context) {
     return Text(text,style: TextStyle(
-      fontSize: size
+      fontSize: size,
+      color: color
     ),);
   }
 }

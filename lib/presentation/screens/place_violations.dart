@@ -6,9 +6,12 @@ import 'package:sjekk_application/data/repositories/remote/violation_repository.
 import 'package:sjekk_application/presentation/providers/violations_provider.dart';
 import 'package:sjekk_application/presentation/screens/completed_violation_brief_information.dart';
 import 'package:sjekk_application/presentation/screens/completed_violation_images.dart';
+import 'package:sjekk_application/presentation/screens/completed_violations_details_screen.dart';
 import 'package:sjekk_application/presentation/widgets/template/theme/colors_theme.dart';
+import 'package:sjekk_application/presentation/widgets/template/widgets/completed_violation.dart';
 import 'package:sjekk_application/presentation/widgets/template/widgets/empty_data_container.dart';
 import 'package:sjekk_application/presentation/widgets/template/widgets/place_registered_vl.dart';
+import 'package:sjekk_application/presentation/widgets/template/widgets/saved_violation.dart';
 
 import '../../core/utils/snackbar_utils.dart';
 import '../providers/create_violation_provider.dart';
@@ -206,7 +209,7 @@ class _PlaceViolationsState extends State<PlaceViolations> {
         entry!
       );
       },
-          child: PlaceRegisteredVL(vl: violation)
+          child: SavedViolationWidget(violation: violation)
         );
       },
     );
@@ -223,7 +226,7 @@ class _PlaceViolationsState extends State<PlaceViolations> {
                       Violation violation = violations[index];
                 
                       return GestureDetector(
-                                                                        onLongPress: (){
+                                                                        onTap: (){
               if(entry?.mounted ?? false){
                 entry?.remove();
               }
@@ -234,17 +237,7 @@ class _PlaceViolationsState extends State<PlaceViolations> {
                   headerText: 'OPTIONS',
                   headerColor: Colors.black.withOpacity(0.7),
                   options: [
-                    TemplateOption(
-                      text: 'PRINT', 
-                      backgroundColor: primaryColor,
-                      textColor: Colors.white,
-                      iconColor: Colors.white,
-                      icon: Icons.print, 
-                      onTap: () async{
-
-                      }
-                    ),
-                    TemplateOption(
+                                        TemplateOption(
                       text: 'INFORMATION', 
                       backgroundColor: secondaryColor,
                       textColor: Colors.white,
@@ -258,6 +251,34 @@ class _PlaceViolationsState extends State<PlaceViolations> {
                           arguments: {
                             'violation': violations[index]
                           }
+                        );
+                      }
+                    ),
+                    TemplateOption(
+                      text: 'PRINT', 
+                      backgroundColor: primaryColor,
+                      textColor: Colors.white,
+                      iconColor: Colors.white,
+                      icon: Icons.print, 
+                      onTap: () async{
+
+                      }
+                    ),
+                    TemplateOption(
+                      text: 'FULL DATA', 
+                      backgroundColor: secondaryColor,
+                      textColor: Colors.white,
+                      iconColor: Colors.white,
+                      icon: Icons.data_object, 
+                      onTap: () async{
+                        entry?.remove();
+                        entry = null;
+
+                        Provider.of<ViolationDetailsProvider>(context, listen: false).setViolation(violation);
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => CompletedViolationDetailsScreen(violation: violation,)
+                          )
                         );
                       }
                     ),
@@ -298,7 +319,7 @@ class _PlaceViolationsState extends State<PlaceViolations> {
               entry!
             );
             },
-                        child: PlaceRegisteredVL(vl: violation)
+                        child: CompletedViolationWidget(violation: violation)
                       );
                     },
                   ),

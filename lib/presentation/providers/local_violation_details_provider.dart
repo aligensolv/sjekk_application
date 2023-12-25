@@ -5,11 +5,17 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sjekk_application/data/models/brand_model.dart';
 import 'package:sjekk_application/data/models/car_image_model.dart';
+import 'package:sjekk_application/data/models/car_type_model.dart';
+import 'package:sjekk_application/data/models/color_model.dart';
+import 'package:sjekk_application/data/models/plate_info_model.dart';
+import 'package:sjekk_application/data/models/registered_car_model.dart';
 import 'package:sjekk_application/data/models/rule_model.dart';
 
 import '../../data/models/print_option_model.dart';
 import '../../data/models/violation_model.dart';
+import '../../data/repositories/remote/violation_repository.dart';
 
 class LocalViolationDetailsProvider extends ChangeNotifier{
   late Violation localViolationCopy;
@@ -26,6 +32,14 @@ class LocalViolationDetailsProvider extends ChangeNotifier{
   int maxTimePolicy = 0;
   String timePassed = "";
   bool isTimerActive = false;
+
+    DateTime? siteLoginTime;
+
+
+  setSiteLoginTime(DateTime? date){
+    siteLoginTime = date;
+    notifyListeners();
+  }
 
   updateTimePolicy(){
     if(localViolationCopy.rules.any((element) => element.policyTime > 0)){
@@ -128,6 +142,23 @@ class LocalViolationDetailsProvider extends ChangeNotifier{
     notifyListeners();
   }
 
+  removeRule(Rule rule){
+    localViolationCopy.rules= localViolationCopy.rules.where((element){
+      return element.id != rule.id;
+    }).toList();
+    localViolationCopy.rules.sort(
+      (a, b){
+            var partsA = a.name.split('-');
+            var numberA = int.parse(partsA[0]);
+            var partsB = b.name.split('-');
+            var numberB = int.parse(partsB[0]);
+
+            return numberA - numberB;
+      }
+  );
+    notifyListeners();
+  }
+
   updateInnerComment(String comment){
     localViolationCopy.paperComment = comment;
     notifyListeners();
@@ -135,6 +166,56 @@ class LocalViolationDetailsProvider extends ChangeNotifier{
 
   updateOutterComment(String comment){
     localViolationCopy.outComment = comment;
+    notifyListeners();
+  }
+
+
+  changePlateInfo(PlateInfo plateInfo){
+    localViolationCopy.plateInfo = plateInfo;
+    notifyListeners();
+  }
+
+  changeRegisterdCarData(RegisteredCar? registeredCar){
+    localViolationCopy.registeredCar = registeredCar;
+    localViolationCopy.is_car_registered = registeredCar != null;
+
+    notifyListeners();
+  }
+
+  changeViolationType(CarType type){
+    localViolationCopy.plateInfo.type = type.value;
+    notifyListeners();
+  }
+
+  changeViolationColor(CarColor color){
+    localViolationCopy.plateInfo.color = color.value;
+    notifyListeners();
+  }
+
+  changeViolationBrand(Brand brand){
+    localViolationCopy.plateInfo.brand = brand.value;
+    notifyListeners();
+  }
+
+  changeViolationYear(String year){
+    localViolationCopy.plateInfo.year = year;
+    notifyListeners();
+  }
+
+  changeViolationDescription(String description){
+    localViolationCopy.plateInfo.description = description;
+    notifyListeners();
+  }
+
+  Future uploadViolationToServer() async{
+    try{
+        final ViolationRepositoryImpl _violationRepositoryImpl = ViolationRepositoryImpl();
+      await _violationRepositoryImpl.uploadViolationToServer(localViolationCopy);
+    }catch(error){
+      // errorState = true;
+      // errorMessage = error.toString();
+    }
+
     notifyListeners();
   }
 }

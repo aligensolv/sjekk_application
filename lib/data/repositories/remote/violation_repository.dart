@@ -8,19 +8,23 @@ import 'package:sjekk_application/data/models/violation_model.dart';
 import 'package:sjekk_application/data/repositories/local/cache_repository_impl.dart';
 import 'package:sjekk_application/domain/repositories/violation_repository.dart';
 import 'package:http/http.dart' as http;
+import 'package:sjekk_application/presentation/providers/shift_provider.dart';
 
 import '../../models/place_model.dart';
 
 class ViolationRepositoryImpl extends IViolationRepository{
   @override
   Future<List<Violation>> getCompletedViolations() async{
-    final uri = Uri.parse('$baseUrl/violations/completed');
+    final uri = Uri.parse('$baseUrl/violations');
     String? token = await CacheRepositoryImpl.instance.get('token');
+    ShiftProvider shiftProvider = ShiftProvider.instance;
+
 
     final response = await http.get(
       uri,
       headers: {
         'token': token.toString(),
+        'date': shiftProvider.shift!.startDate
       }
     );
 
@@ -308,6 +312,8 @@ class ViolationRepositoryImpl extends IViolationRepository{
 
       return result;
     }catch (error){
+      perror(error.toString());
+      perror('yes an error');
       rethrow;
     }
   }
@@ -316,6 +322,7 @@ class ViolationRepositoryImpl extends IViolationRepository{
   Future<List<Violation>> getAllSavedViolations() async{
     try{
       List allSavedViolations = await DatabaseHelper.instance.getAllData('violations');
+      pinfo(allSavedViolations);
       List<Violation> violations = allSavedViolations.map((e) {
         return Violation.fromEncodedJson(e);
       }).toList().reversed.toList();
@@ -355,11 +362,13 @@ class ViolationRepositoryImpl extends IViolationRepository{
         try{
           final uri = Uri.parse('$baseUrl/violations/place/$id');
     String? token = await CacheRepositoryImpl.instance.get('token');
+    ShiftProvider shiftProvider = ShiftProvider.instance;
 
     final response = await http.get(
       uri,
       headers: {
         'token': token.toString(),
+        'date': shiftProvider.shift!.startDate
       }
     );
 
@@ -447,7 +456,7 @@ class ViolationRepositoryImpl extends IViolationRepository{
       var request = http.MultipartRequest('POST', uri);
 
       for(final image in violation.carImages){
-        request.files.add(await http.MultipartFile.fromPath(image.path, image.path));
+        request.files.add(await http.MultipartFile.fromPath(image.date, image.path));
       }      
 
       String? token = await cacheRepository.get('token');
